@@ -3,11 +3,54 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using System.IO;
+using System.Net.Http;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace FlickrNet
 {
     public static partial class FlickrResponder
     {
+        struct QueueItem
+        {
+            public HttpRequestMessage request;
+            public Action<HttpResponseMessage> callback;
+        }
+        static BlockingCollection<QueueItem> taskQueue;
+        static HttpClient httpClient;
+        static Task backGroundTask; 
+        static FlickrResponder()
+        {
+            httpClient = new HttpClient();
+            taskQueue = new BlockingCollection<QueueItem>();
+            backGroundTask = new Task(
+                async () =>
+                {
+                    while(!taskQueue.IsCompleted)
+                    {
+                        try
+                        {
+                            var tsk = taskQueue.Take();
+                            var response = await httpClient.SendAsync(tsk.request);
+                            tsk.callback(response);
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                }
+                );
+            backGroundTask.Start();
+
+        }
+        static void CleanUp()
+        {
+            taskQueue.CompleteAdding();
+            backGroundTask.Wait();
+            httpClient.Dispose();
+        }
+
         /// <summary>
         /// Gets a data response for the given base url and parameters, 
         /// either using OAuth or not depending on which parameters were passed in.
@@ -74,70 +117,58 @@ namespace FlickrNet
             {
                 DownloadDataAsync(method, baseUrl, data, PostContentType, authHeader, callback);
             }
-            catch (WebException ex)
+            catch (HttpRequestException ex)
             {
-                var response = ex.Response as HttpWebResponse;
-                if (response == null) throw;
+                //var response = ex.Response as HttpWebResponse;
+                //if (response == null) throw;
 
-                if (response.StatusCode != HttpStatusCode.BadRequest && response.StatusCode != HttpStatusCode.Unauthorized) throw;
+                //if (response.StatusCode != HttpStatusCode.BadRequest && response.StatusCode != HttpStatusCode.Unauthorized) throw;
 
-                using (var responseReader = new StreamReader(response.GetResponseStream()))
-                {
-                    string responseData = responseReader.ReadToEnd();
-                    responseReader.Close();
+                //using (var responseReader = new StreamReader(response.GetResponseStream()))
+                //{
+                //    string responseData = responseReader.ReadToEnd();
+                //    responseReader.Close();
 
-                    throw new OAuthException(responseData, ex);
-                }
+                    throw new OAuthException(ex);
+                //}
             }
         }
 
         private static void DownloadDataAsync(string method, string baseUrl, string data, string contentType, string authHeader, Action<FlickrResult<string>> callback)
         {
-            var client = new WebClient();
-            client.Encoding = System.Text.Encoding.UTF8;
+            HttpRequestMessage request = new HttpRequestMessage(new HttpMethod(method), baseUrl);
 
-            if (!string.IsNullOrEmpty(contentType)) client.Headers["Content-Type"] = contentType;
-            if (!string.IsNullOrEmpty(authHeader)) client.Headers["Authorization"] = authHeader;
-
-            if (method == "POST")
+            if ((data!= null) && (data.Length > 0))
             {
-                client.UploadStringCompleted += delegate(object sender, UploadStringCompletedEventArgs e)
+                request.Content = new StringContent(data);
+            }
+
+            if (!string.IsNullOrEmpty(contentType)) request.Content.Headers.Add("Content-Type", contentType);
+            if (!string.IsNullOrEmpty(authHeader)) request.Headers.Add("Authorization", authHeader);
+
+            taskQueue.Add(new QueueItem()
+            {
+                request = request,
+                callback = async (HttpResponseMessage resp) =>
                 {
                     var result = new FlickrResult<string>();
-                    if (e.Error != null)
+                    try
                     {
-                        result.Error = e.Error;
+                        resp.EnsureSuccessStatusCode();
+                    }
+                    catch (Exception e)
+                    {
+                        result.Error = e;
                         callback(result);
                         return;
                     }
 
-                    result.Result = e.Result;
+                    result.Result = await resp.Content.ReadAsStringAsync();
                     callback(result);
                     return;
-                };
-
-                client.UploadStringAsync(new Uri(baseUrl), data);
-            }
-            else
-            {
-                client.DownloadStringCompleted += delegate(object sender, DownloadStringCompletedEventArgs e)
-                {
-                    var result = new FlickrResult<string>();
-                    if (e.Error != null)
-                    {
-                        result.Error = e.Error;
-                        callback(result);
-                        return;
-                    }
-
-                    result.Result = e.Result;
-                    callback(result);
-                    return;
-                };
-
-                client.DownloadStringAsync(new Uri(baseUrl));
-
-            }
+                }
+            });
+            
         }
     }
 }

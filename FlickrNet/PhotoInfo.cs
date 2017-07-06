@@ -830,7 +830,7 @@ namespace FlickrNet
         {
             get { return new System.Windows.Point(XPosition, YPosition); }
         }
-#else
+#elif !DOTNETSTANDARD
         /// <summary>
         /// The <see cref="System.Drawing.Size"/> of this note. Derived from <see cref="Width"/> and <see cref="Height"/>.
         /// </summary>

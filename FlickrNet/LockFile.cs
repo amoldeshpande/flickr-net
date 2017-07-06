@@ -63,7 +63,11 @@ namespace FlickrNet
                             case 33:
                             case 32 | 0x1620:
                             case 33 | 0x1620:
+#if !DOTNETSTANDARD
                                 Thread.Sleep(50);
+#else
+                                System.Threading.Tasks.Task.Delay(50).Wait();
+#endif
                                 continue;
                             default:
                                 throw;
@@ -87,7 +91,11 @@ namespace FlickrNet
                     throw new InvalidOperationException("Tried to dispose a FileLock that was not owned");
                 try
                 {
+#if !DOTNETSTANDARD
                     stream.Close();
+#else
+                    stream.Dispose();
+#endif
                     try
                     {
                         File.Delete(filepath);

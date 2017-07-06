@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Collections;
-#if SILVERLIGHT
 using System.Linq;
-#endif
-
 namespace FlickrNet
 {
     public partial class Flickr
@@ -277,7 +274,7 @@ namespace FlickrNet
             if (dates != null && dates.Length > 0)
             {
                 Array.Sort<DateTime>(dates);
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !DOTNETSTANDARD
                 dateString = string.Join(",", new List<DateTime>(dates).ConvertAll<string>(new Converter<DateTime, string>(delegate(DateTime d) 
                 {
                     return UtilityMethods.DateToUnixTimestamp(d).ToString(); 
@@ -290,7 +287,7 @@ namespace FlickrNet
             if (takenDates != null && takenDates.Length > 0)
             {
                 Array.Sort<DateTime>(takenDates);
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !DOTNETSTANDARD
                 takenDateString = string.Join(",", new List<DateTime>(takenDates).ConvertAll<string>(new Converter<DateTime, string>(delegate(DateTime d) 
                     {
                         return UtilityMethods.DateToUnixTimestamp(d).ToString(); 

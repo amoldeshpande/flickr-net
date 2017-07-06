@@ -63,7 +63,6 @@ namespace FlickrNet
             using (Stream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 var photoId = UploadPicture(stream, file, title, description, tags, false, false, false, ContentType.None, SafetyLevel.None, HiddenFromSearch.None);
-                stream.Close();
                 return photoId;
             }
         }
@@ -87,7 +86,6 @@ namespace FlickrNet
             using (Stream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 var photoId = UploadPicture(stream, file, title, description, tags, isPublic, isFamily, isFriend, ContentType.None, SafetyLevel.None, HiddenFromSearch.None);
-                stream.Close();
                 return photoId;
             }
         }
@@ -177,7 +175,9 @@ namespace FlickrNet
             
             var req = (HttpWebRequest)WebRequest.Create(uploadUri);
             req.Method = "POST";
+#if !SILVERLIGHT && !DOTNETSTANDARD
             if (Proxy != null) req.Proxy = Proxy;
+#endif
             req.Timeout = HttpTimeout;
             req.ContentType = "multipart/form-data; boundary=" + boundary;
 
@@ -217,15 +217,15 @@ namespace FlickrNet
         /// <returns>The id of the photograph after successful uploading.</returns>
         public string ReplacePicture(string fullFileName, string photoId)
         {
-            FileStream stream = null;
             try
             {
-                stream = new FileStream(fullFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-                return ReplacePicture(stream, fullFileName, photoId);
+                using (var stream = new FileStream(fullFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    return ReplacePicture(stream, fullFileName, photoId);
+                }
             }
             finally
             {
-                if (stream != null) stream.Close();
             }
 
         }

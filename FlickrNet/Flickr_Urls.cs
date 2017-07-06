@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Collections;
+using System.Xml;
+using System.Xml.XPath;
 
 namespace FlickrNet
 {
@@ -20,7 +22,7 @@ namespace FlickrNet
 
             UnknownResponse response = GetResponseCache<UnknownResponse>(parameters);
 
-            System.Xml.XmlNode node = response.GetXmlDocument().SelectSingleNode("*/@url");
+            XmlNode node = response.GetXmlDocument().SelectSingleNode("*/@url");
             return node == null ? null : node.Value.Replace("http://", "https://");
         }
 

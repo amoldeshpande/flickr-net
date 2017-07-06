@@ -9,6 +9,7 @@ using System.Xml.Serialization;
 using System.Xml;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 #if SILVERLIGHT
 using System.Linq;
 #endif
@@ -153,6 +154,7 @@ namespace FlickrNet
         /// <returns></returns>
         public static string ExtrasToString(PhotoSearchExtras extras)
         {
+#if !DOTNETSTANDARD
             var extraList = new List<string>();
             var e = typeof (PhotoSearchExtras);
             foreach (PhotoSearchExtras extra in GetFlags(extras))
@@ -165,6 +167,9 @@ namespace FlickrNet
             }
 
             return string.Join(",", extraList.ToArray());
+#else
+            return String.Empty;
+#endif
 
         }
 
@@ -216,6 +221,7 @@ namespace FlickrNet
 
         }
 
+#if !DOTNETSTANDARD
         private static IEnumerable<Enum> GetFlags(Enum input)
         {
             var i = Convert.ToInt64(input);
@@ -233,6 +239,7 @@ namespace FlickrNet
             }
             return enumerations;
         }
+#endif // !DOTNETSTANDARD
 
         /// <summary>
         /// Converts a <see cref="PhotoSearchSortOrder"/> into a string for use by the Flickr API.
@@ -466,13 +473,17 @@ namespace FlickrNet
 #if SILVERLIGHT
             hashedBytes = MD5Core.GetHash(data, Encoding.UTF8);
 #else
-            using (System.Security.Cryptography.MD5CryptoServiceProvider csp = new System.Security.Cryptography.MD5CryptoServiceProvider())
+            using (MD5 mD5Hash = MD5.Create())
             {
-                byte[] bytes = System.Text.Encoding.UTF8.GetBytes(data);
-                hashedBytes = csp.ComputeHash(bytes, 0, bytes.Length);
+                byte[] bytes = Encoding.UTF8.GetBytes(data);
+                hashedBytes = mD5Hash.ComputeHash(bytes);
             }
 #endif
+#if !DOTNETSTANDARD
             return BitConverter.ToString(hashedBytes).Replace("-", string.Empty).ToLower(System.Globalization.CultureInfo.InvariantCulture);
+#else
+            return BitConverter.ToString(hashedBytes).Replace("-", string.Empty).ToLower();
+#endif
         }
 
         internal static DateTime MySqlToDate(string p)

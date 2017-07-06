@@ -1,8 +1,8 @@
 using System;
-using System.Configuration;
 using System.Xml;
 
-#if !(MONOTOUCH || WindowsCE || SILVERLIGHT)
+#if !(MONOTOUCH || WindowsCE || SILVERLIGHT || DOTNETSTANDARD)
+using System.Configuration;
 namespace FlickrNet
 {
     /// <summary>

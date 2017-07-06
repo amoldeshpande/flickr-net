@@ -3,6 +3,7 @@ using System.Net;
 using System.Xml;
 using System.IO;
 using System.Collections.Generic;
+using System.Net.Http;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 
@@ -10,6 +11,7 @@ namespace FlickrNet
 {
     public partial class Flickr
     {
+        HttpClient httpClient = new HttpClient();
         private void GetResponseEvent<T>(Dictionary<string, string> parameters, EventHandler<FlickrResultArgs<T>> handler) where T : IFlickrParsable, new()
         {
             GetResponseAsync<T>(
@@ -103,20 +105,11 @@ namespace FlickrNet
 
             var result = new FlickrResult<T>();
 
-            var request = (HttpWebRequest)WebRequest.Create(url);
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.Method = "POST";
-            request.BeginGetRequestStream(requestAsyncResult =>
+            var request = new HttpRequestMessage(new HttpMethod("POST"), url);
+            request.Content = new StringContent(postContents);
+            request.Content.Headers.Add("ContentType" , "application/x-www-form-urlencoded");
             {
-                using (Stream s = request.EndGetRequestStream(requestAsyncResult))
-                {
-                    using (StreamWriter sw = new StreamWriter(s))
-                    {
-                        sw.Write(postContents);
-                        sw.Close();
-                    }
-                    s.Close();
-                }
+                
 
                 request.BeginGetResponse(responseAsyncResult =>
                 {

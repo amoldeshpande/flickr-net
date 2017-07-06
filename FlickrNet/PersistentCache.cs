@@ -184,6 +184,9 @@ namespace FlickrNet
 
         private void InternalGetAll(Type valueType, out string[] keys, out Array values)
         {
+            keys = null;
+            values = null;
+#if !DOTNETSTANDARD
             if (!typeof(ICacheItem).IsAssignableFrom(valueType))
                 throw new ArgumentException("Type " + valueType.FullName + " does not implement ICacheItem", "valueType");
 
@@ -193,6 +196,7 @@ namespace FlickrNet
                 values.SetValue(dataTable[keys[i]], i);
 
             Array.Sort(values, keys, new CreationTimeComparer());
+#endif
         }
 
         private ICacheItem InternalGet(string key)

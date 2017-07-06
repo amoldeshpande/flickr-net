@@ -5,7 +5,7 @@ namespace FlickrNet
     /// <summary>
     /// Summary description for SafeNativeMethods.
     /// </summary>
-#if !WindowsCE && !SILVERLIGHT
+#if !WindowsCE && !SILVERLIGHT && !DOTNETSTANDARD
     [System.Security.SuppressUnmanagedCodeSecurity]
 #endif
     internal class SafeNativeMethods 
@@ -16,7 +16,7 @@ namespace FlickrNet
 
         internal static int GetErrorCode(System.IO.IOException ioe)
         {
-#if !WindowsCE && !SILVERLIGHT
+#if !WindowsCE && !SILVERLIGHT && !DOTNETSTANDARD
             var permission = new System.Security.Permissions.SecurityPermission(System.Security.Permissions.SecurityPermissionFlag.UnmanagedCode);
             permission.Demand();
 

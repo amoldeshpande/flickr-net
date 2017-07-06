@@ -43,7 +43,7 @@ namespace FlickrNet
         /// </summary>
         public event EventHandler<UploadProgressEventArgs> OnUploadProgress;
 
-#if !(MONOTOUCH || WindowsCE || SILVERLIGHT)
+#if !(MONOTOUCH || WindowsCE || SILVERLIGHT || DOTNETSTANDARD)
         private static bool isServiceSet;
 #endif
         private static SupportedService defaultService = SupportedService.Flickr;
@@ -103,7 +103,7 @@ namespace FlickrNet
         private string lastRequest;
         private string lastResponse;
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !DOTNETSTANDARD
         private WebProxy proxy; 
 #endif
 
@@ -216,7 +216,7 @@ namespace FlickrNet
         {
             get
             {
-#if !(MONOTOUCH || WindowsCE || SILVERLIGHT)
+#if !(MONOTOUCH || WindowsCE || SILVERLIGHT || DOTNETSTANDARD)
                 if (!isServiceSet && FlickrConfigurationManager.Settings != null)
                 {
                     defaultService = FlickrConfigurationManager.Settings.Service;
@@ -228,7 +228,7 @@ namespace FlickrNet
             set
             {
                 defaultService = value;
-#if !(MONOTOUCH || WindowsCE || SILVERLIGHT)
+#if !(MONOTOUCH || WindowsCE || SILVERLIGHT || DOTNETSTANDARD)
                 isServiceSet = true;
 #endif
             }
@@ -246,7 +246,7 @@ namespace FlickrNet
             set
             {
                 service = value;
-#if !(MONOTOUCH || WindowsCE || SILVERLIGHT)
+#if !(MONOTOUCH || WindowsCE || SILVERLIGHT || DOTNETSTANDARD)
                 ServicePointManager.Expect100Continue &= service != SupportedService.Zooomr;
 #endif
             }
@@ -290,7 +290,7 @@ namespace FlickrNet
             get { return lastRequest; }
         }
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !DOTNETSTANDARD
         /// <summary>
         /// You can set the <see cref="WebProxy"/> or alter its properties.
         /// It defaults to your internet explorer proxy settings.
@@ -341,7 +341,7 @@ namespace FlickrNet
             InstanceCacheDisabled = CacheDisabled;
             CurrentService = DefaultService;
 
-#if !(MONOTOUCH || WindowsCE || SILVERLIGHT)
+#if !(MONOTOUCH || WindowsCE || SILVERLIGHT || DOTNETSTANDARD)
 
             var settings = FlickrConfigurationManager.Settings;
             if (settings == null) return;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FlickrNet
 {
@@ -267,13 +268,13 @@ namespace FlickrNet
             if (dates != null && dates.Length > 0)
             {
                 Array.Sort(dates);
-                dateString = string.Join(",", new List<DateTime>(dates).ConvertAll(UtilityMethods.DateToUnixTimestamp).ToArray());
+                dateString = string.Join(",", new List<DateTime>(dates).Select(x => UtilityMethods.DateToUnixTimestamp(x)).ToArray());
             }
 
             if (takenDates != null && takenDates.Length > 0)
             {
                 Array.Sort(takenDates);
-                takenDateString = string.Join(",", new List<DateTime>(takenDates).ConvertAll(UtilityMethods.DateToMySql).ToArray());
+                takenDateString = string.Join(",", new List<DateTime>(takenDates).Select(x=>UtilityMethods.DateToMySql(x)).ToArray());
             }
 
             var parameters = new Dictionary<string, string>();

@@ -1,6 +1,7 @@
-#if !(MONOTOUCH || WindowsCE || SILVERLIGHT)
+#if !(MONOTOUCH || WindowsCE || SILVERLIGHT || DOTNETSTANDARD)
 using System;
 using System.Collections.Specialized;
+using System.Configuration;
 using System.Xml;
 
 namespace FlickrNet
@@ -82,7 +83,7 @@ namespace FlickrNet
                         }
                         catch (FormatException ex)
                         {
-                            throw new System.Configuration.ConfigurationErrorsException("cacheDisbled should be \"true\" or \"false\"", ex, configNode);
+                            throw new ConfigurationErrorsException("cacheDisbled should be \"true\" or \"false\"", ex, configNode);
                         }
                     case "cacheSize":
                         try
@@ -92,7 +93,7 @@ namespace FlickrNet
                         }
                         catch (FormatException ex)
                         {
-                            throw new System.Configuration.ConfigurationErrorsException("cacheSize should be integer value", ex, configNode);
+                            throw new ConfigurationErrorsException("cacheSize should be integer value", ex, configNode);
                         }
                     case "cacheTimeout":
                         try
@@ -102,7 +103,7 @@ namespace FlickrNet
                         }
                         catch (FormatException ex)
                         {
-                            throw new System.Configuration.ConfigurationErrorsException("cacheTimeout should be TimeSpan value ([d:]HH:mm:ss)", ex, configNode);
+                            throw new ConfigurationErrorsException("cacheTimeout should be TimeSpan value ([d:]HH:mm:ss)", ex, configNode);
                         }
                     case "cacheLocation":
                         cacheLocation = attribute.Value;

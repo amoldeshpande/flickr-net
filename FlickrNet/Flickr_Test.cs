@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Collections;
+#if !DOTNETSTANDARD
 using System.Xml;
 using System.Collections.Specialized;
 using System.Xml.XPath;
+#endif
 
 namespace FlickrNet
 {

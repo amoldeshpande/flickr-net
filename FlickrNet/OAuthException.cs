@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using System.IO;
+using System.Net.Http;
 
 namespace FlickrNet
 {
@@ -50,22 +51,22 @@ namespace FlickrNet
         /// <param name="innerException"></param>
         public OAuthException(Exception innerException) : base("OAuth Exception", innerException)
         {
-            var exception = innerException as WebException;
+            var exception = innerException as HttpRequestException;
             if (exception == null) return;
 
-            var res = exception.Response as HttpWebResponse;
-            if (res == null) return;
+            //var res = exception.Response as HttpWebResponse;
+            //if (res == null) return;
 
-            using(var sr = new StreamReader(res.GetResponseStream()))
-            {
-                var response = sr.ReadToEnd();
+            //using(var sr = new StreamReader(res.GetResponseStream()))
+            //{
+            //    var response = sr.ReadToEnd();
 
-                FullResponse = response;
+            //    FullResponse = response;
 
-                OAuthErrorPameters = UtilityMethods.StringToDictionary(response);
-                _mess = "OAuth Exception occurred: " + OAuthErrorPameters["oauth_problem"];
-                sr.Close();
-            }
+            //    OAuthErrorPameters = UtilityMethods.StringToDictionary(response);
+            //    _mess = "OAuth Exception occurred: " + OAuthErrorPameters["oauth_problem"];
+            //    sr.Close();
+            //}
         }
 
         /// <summary>
