@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Configuration;
 #endif
 #if DOTNETSTANDARD
+using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Json;
 #endif
@@ -219,6 +220,23 @@ namespace FlickrNet
             sett.cacheSize = int.Parse(config["cacheSize"]);
             sett.cacheTimeout = TimeSpan.Parse(config["cacheTimeout"]);
             sett.cacheLocation = config["cacheLocation"];
+            sett.proxyPort = 0;
+            sett.proxyAddress = String.Empty;
+            sett.proxyDefined = false;
+            sett.service = SupportedService.Flickr;
+        
+            return sett;
+        }
+        public static FlickrConfigurationSettings FromDict(Dictionary<String,String> config)
+        {
+            FlickrConfigurationSettings sett = new FlickrConfigurationSettings();
+        
+            sett.apiKey = config.ContainsKey("apiKey") ? config["apiKey"] : null;
+            sett.apiSecret = config.ContainsKey("secret") ? config["secret"] : null;
+            sett.apiToken = config.ContainsKey("token") ?config["token"] : null;
+            sett.cacheSize = int.Parse(config.ContainsKey("cacheSize") ? config["cacheSize"] : "0");
+            sett.cacheTimeout = TimeSpan.Parse(config.ContainsKey("cacheTimeout") ?config["cacheTimeout"] : "1.00:00:00");
+            sett.cacheLocation = config.ContainsKey("cacheLocation") ?config["cacheLocation"] : null;
             sett.proxyPort = 0;
             sett.proxyAddress = String.Empty;
             sett.proxyDefined = false;

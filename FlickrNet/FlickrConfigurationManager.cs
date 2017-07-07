@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Xml;
 
 #if !(MONOTOUCH || WindowsCE || SILVERLIGHT || DOTNETSTANDARD)
@@ -41,6 +42,11 @@ namespace FlickrNet
         {
             configSection = section.Name;
             return new FlickrConfigurationSettings(section);
+        }
+#else
+        public FlickrConfigurationSettings CreateFromDictionary(Dictionary<String,String> dict)
+        {
+            return FlickrConfigurationSettings.FromDict(dict);
         }
 #endif
     }

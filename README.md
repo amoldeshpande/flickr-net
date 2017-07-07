@@ -1,19 +1,87 @@
-This is a .net standard version of flickrnet
+# Flickr-Net
 
-Be warned that I ran out of time to test this. It should, however, require minimal more effort to fix any bugs
+The Flickr.Net API Library is a .Net Library for accessing the Flickr API. 
+It is written entirely in C#.
 
-I went off the master branch, went and changed every async method to the async/await  instead of the callback style. Once I changed WebCilent to System.Net.HttpClient all that bubbled up unless I wanted to do ugly hacks to preserve the old way.
+The library provides a simple one-to-one mapping to the methods of the Flickr REST API, 
+hopefully hiding all of the complexity of calling the API, especially when it comes to authentication. 
+Check the Flickr API web site for the full list of commands, and then use the corresponding method in the Flickr library, 
+e.g. to call flickr.photos.search use the Flickr.PhotosSearch method.
 
-(I noticed a sample that uses async/await later, so I'm thinking I should've gone off the v4 branch instead.)
+The library is not an attempt to provide an ORM layer over the Flickr API, 
+e.g. if you retrieve a list of photosets for a user (i.e. by calling Flickr.PhotosetsGetList) 
+there is no direct property on each photoset to get the photos for that set, 
+you must go back to the Flickr object and call Flickr.PhotosetsGetPhotos passing in the photoset id.
 
-Of course, that means I threw away backward compatibility.
+# Getting Started
 
-Unit Tests were the most painful part. Nunit does not like the combination of desktop unit test with .net standard assembly.  Xunit does run, but that mean changing loads of test code.  That is why you will find a new FlickrNetTest-xUnit folder. You can switch between the two by renaming the folder you want to FlickrNetTest  (Incase Nunit gets their shit together, or someone wants to write .net core unit test projects, I left the original alone for the most part)
+The FlickrNet API library is available via NuGet.org. SImply run the following command:
 
-I haven't had time to fully test it since this took longer than I thought I need to get back to real work.
+~~~
+Install-Package FlickrNet
+~~~
 
-My intention is not to fork FlickrNet permanently, so I will not be taking pull requests or fixing issues. If you want real support for .net standard, please wait for the official FlickrNet to get there. If you need something that works for you now, this may be it.
+# Examples
+
+You can create a new instance of the Flickr class, and set its properties, or you can use one of the parameterised constructors:
+
+~~~
+Flickr flickr = new Flickr();
+flickr.ApiKey = myApiKey;
+~~~
+or
+~~~
+Flickr flickr = new Flickr(myApiKey);
+~~~
+
+The simplest method (although it has the most parameters) is probably the PhotosSearch method, 
+which is best used by passing in a PhotoSearchOptions instance:
+
+~~~
+var options = new PhotoSearchOptions { Tags = "colorful", PerPage = 20, Page = 1 };
+PhotoCollection photos = flickr.PhotosSearch(options);
+
+foreach(Photo photo in photos) 
+{
+  Console.WriteLine("Photo {0} has title {1}", photo.PhotoId, photo.Title);
+}
+~~~
+
+## Photo Extras
+One of the hardest things to understand initially is that not all properties are returned by Flickr, you have to explicity request them.  
+For example the following code would be used to return the Tags and the LargeUrl for a selection of photos:
+~~~
+var options = new PhotoSearchOptions { 
+  Tags = "colorful", 
+  PerPage = 20, 
+  Page = 1, 
+  Extras = PhotoSearchExtras.LargeUrl | PhotoSearchExtras.Tags 
+};
+
+PhotoCollection photos = flickr.PhotosSearch(options);
+// Each photos Tags and LargeUrl properties should now be set, 
+// assuming that the photo has any tags, and is large enough to have a LargeUrl image available.
+~~~
 
 
+# Sample Applications
 
+I've started a separate CodePlex project to host sample applications: 
+
+https://github.com/samjudson/flickrnet-samples
+
+View the sample app live on the web here:
+
+http://wackylabs.azurewebsites.net/
+
+# License
+
+The project is licensed under both the LGPL 2.1 license, and the Apache 2.0 license. 
+This gives you the flexibility to do pretty much anything you want with the code. Enjoy!
+
+# Contact
+
+You can contact me at via the People tab or post a discussion here on codeplex if you require further help.
+
+See my Flickr homepage at http://www.flickr.com/photos/samjudson
 

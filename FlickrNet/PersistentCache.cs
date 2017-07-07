@@ -3,6 +3,7 @@ using System.Collections;
 using System.Diagnostics;
 using System.IO;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace FlickrNet
 {
@@ -186,8 +187,11 @@ namespace FlickrNet
         {
             keys = null;
             values = null;
-#if !DOTNETSTANDARD
+#if DOTNETSTANDARD
+            if(!typeof(ICacheItem).GetType().GetTypeInfo().IsAssignableFrom(valueType.GetType().GetTypeInfo()))
+#else
             if (!typeof(ICacheItem).IsAssignableFrom(valueType))
+#endif
                 throw new ArgumentException("Type " + valueType.FullName + " does not implement ICacheItem", "valueType");
 
             keys = new List<string>(dataTable.Keys).ToArray();
@@ -196,7 +200,6 @@ namespace FlickrNet
                 values.SetValue(dataTable[keys[i]], i);
 
             Array.Sort(values, keys, new CreationTimeComparer());
-#endif
         }
 
         private ICacheItem InternalGet(string key)
