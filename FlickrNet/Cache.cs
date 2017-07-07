@@ -45,7 +45,7 @@ namespace FlickrNet
         {
             get
             {
-#if !(WindowsCE || MONOTOUCH || SILVERLIGHT || DOTNETSTANDARD)
+#if !(WindowsCE || MONOTOUCH || SILVERLIGHT )
                 if (cacheDisabled == Tristate.Null && FlickrConfigurationManager.Settings != null)
                     cacheDisabled = FlickrConfigurationManager.Settings.CacheDisabled ? Tristate.True : Tristate.False;
 #endif
@@ -68,7 +68,7 @@ namespace FlickrNet
         {
             get
             {
-#if !(WindowsCE || MONOTOUCH || SILVERLIGHT || DOTNETSTANDARD)
+#if !(WindowsCE || MONOTOUCH || SILVERLIGHT)
                 if (cacheLocation == null && FlickrConfigurationManager.Settings != null)
                     cacheLocation = FlickrConfigurationManager.Settings.CacheLocation;
 #endif
@@ -87,6 +87,9 @@ namespace FlickrNet
 #endif
 #if SILVERLIGHT
                         cacheLocation = string.Empty;
+#endif
+#if DOTNETSTANDARD
+                        cacheLocation = Path.Combine(Path.GetTempPath(),"FlickrNet");
 #endif
 
                     }

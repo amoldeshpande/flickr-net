@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace FlickrNet
 {
@@ -9,13 +10,13 @@ namespace FlickrNet
         /// <summary>
         /// Gets a collection of Flickr Commons institutions.
         /// </summary>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void CommonsGetInstitutionsAsync(Action<FlickrResult<InstitutionCollection>> callback)
+       
+        public async Task <FlickrResult<InstitutionCollection>> CommonsGetInstitutionsAsync()
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.commons.getInstitutions");
 
-            GetResponseAsync<InstitutionCollection>(parameters, callback);
+            return await GetResponseAsync<InstitutionCollection>(parameters);
         }
     }
 }

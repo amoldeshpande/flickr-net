@@ -1,7 +1,5 @@
 ﻿using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Xml;
 using FlickrNet;
 using NUnit.Framework;
@@ -19,6 +17,7 @@ namespace FlickrNetTest
     [TestFixture]
     public class AuthTests : BaseTest
     {
+#if !DOTNETSTANDARD
         [Test]
         public void AuthGetFrobTest()
         {
@@ -136,6 +135,7 @@ namespace FlickrNetTest
             Assert.AreEqual("Sam Judson", auth.User.FullName);
 
         }
+#endif
     }
 }
 

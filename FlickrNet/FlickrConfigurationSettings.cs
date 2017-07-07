@@ -1,7 +1,12 @@
-#if !(MONOTOUCH || WindowsCE || SILVERLIGHT || DOTNETSTANDARD)
 using System;
 using System.Collections.Specialized;
+#if !(MONOTOUCH || WindowsCE || SILVERLIGHT || DOTNETSTANDARD)
 using System.Configuration;
+#endif
+#if DOTNETSTANDARD
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Json;
+#endif
 using System.Xml;
 
 namespace FlickrNet
@@ -46,14 +51,15 @@ namespace FlickrNet
         private TimeSpan cacheTimeout = TimeSpan.MinValue;
         private string proxyAddress;
         private int proxyPort;
-        private bool proxyDefined;
-        private string proxyUsername;
-        private string proxyPassword;
-        private string proxyDomain;
+        private bool proxyDefined = false;
+        private string proxyUsername = null;
+        private string proxyPassword = null;
+        private string proxyDomain = null;
         private string cacheLocation;
-        private bool cacheDisabled;
+        private bool cacheDisabled = false;
         private SupportedService service;
 
+#if !DOTNETSTANDARD
         /// <summary>
         /// Loads FlickrConfigurationSettings with the settings in the config file.
         /// </summary>
@@ -196,6 +202,31 @@ namespace FlickrNet
             if (proxyDomain != null && proxyUsername == null)
                 throw new System.Configuration.ConfigurationErrorsException("proxy username/password must be specified if proxy domain is specified");
         }
+#else
+        public static FlickrConfigurationSettings FromJsonFile(String jsonFileName,String section)
+        {
+            var builder = new ConfigurationBuilder().AddJsonFile(jsonFileName);
+            IConfiguration config = builder.Build();
+            if(String.IsNullOrEmpty(section) == false)
+            {
+                config = config.GetSection(section);
+            }
+            FlickrConfigurationSettings sett = new FlickrConfigurationSettings();
+        
+            sett.apiKey = config["apiKey"];
+            sett.apiSecret = config["secret"];
+            sett.apiToken = config["token"];
+            sett.cacheSize = int.Parse(config["cacheSize"]);
+            sett.cacheTimeout = TimeSpan.Parse(config["cacheTimeout"]);
+            sett.cacheLocation = config["cacheLocation"];
+            sett.proxyPort = 0;
+            sett.proxyAddress = String.Empty;
+            sett.proxyDefined = false;
+            sett.service = SupportedService.Flickr;
+        
+            return sett;
+        }
+#endif
 
         /// <summary>
         /// API key. Null if not present. Optional.
@@ -304,4 +335,3 @@ namespace FlickrNet
         }
     }
 }
-#endif

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace FlickrNet
 {
@@ -9,14 +10,14 @@ namespace FlickrNet
         /// Gets a list of comments for a photo.
         /// </summary>
         /// <param name="photoId">The id of the photo to return the comments for.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosCommentsGetListAsync(string photoId, Action<FlickrResult<PhotoCommentCollection>> callback)
+       
+        public async Task<FlickrResult<PhotoCommentCollection>> PhotosCommentsGetListAsync(string photoId)
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.photos.comments.getList");
             parameters.Add("photo_id", photoId);
 
-            GetResponseAsync<PhotoCommentCollection>(parameters, callback);
+            return await GetResponseAsync<PhotoCommentCollection>(parameters);
         }
 
         /// <summary>
@@ -24,44 +25,40 @@ namespace FlickrNet
         /// </summary>
         /// <param name="photoId">The ID of the photo to add the comment to.</param>
         /// <param name="commentText">The text of the comment. Can contain some HTML.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosCommentsAddCommentAsync(string photoId, string commentText, Action<FlickrResult<string>> callback)
+       
+        public async Task<FlickrResult<string>> PhotosCommentsAddCommentAsync(string photoId, string commentText)
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.photos.comments.addComment");
             parameters.Add("photo_id", photoId);
             parameters.Add("comment_text", commentText);
 
-            GetResponseAsync<UnknownResponse>(
-                parameters,
-                r =>
-                {
-                    var result = new FlickrResult<string>();
-                    result.HasError = r.HasError;
-                    if (r.HasError)
-                    {
-                        result.Error = r.Error;
-                    }
-                    else
-                    {
-                        result.Result = r.Result.GetAttributeValue("*", "id");
-                    }
-                    callback(result);
-                });
+            var r = await GetResponseAsync<UnknownResponse>(parameters);
+            var result = new FlickrResult<string>();
+            result.HasError = r.HasError;
+            if (r.HasError)
+            {
+                result.Error = r.Error;
+            }
+            else
+            {
+                result.Result = r.Result.GetAttributeValue("*", "id");
+            }
+            return (result);
         }
 
         /// <summary>
         /// Deletes a comment from a photo.
         /// </summary>
         /// <param name="commentId">The ID of the comment to delete.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosCommentsDeleteCommentAsync(string commentId, Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> PhotosCommentsDeleteCommentAsync(string commentId)
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.photos.comments.deleteComment");
             parameters.Add("comment_id", commentId);
 
-            GetResponseAsync<NoResponse>(parameters, callback);
+            return await GetResponseAsync<NoResponse>(parameters);
         }
 
         /// <summary>
@@ -69,15 +66,15 @@ namespace FlickrNet
         /// </summary>
         /// <param name="commentId">The ID of the comment to edit.</param>
         /// <param name="commentText">The new text for the comment.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosCommentsEditCommentAsync(string commentId, string commentText, Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> PhotosCommentsEditCommentAsync(string commentId, string commentText)
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.photos.comments.editComment");
             parameters.Add("comment_id", commentId);
             parameters.Add("comment_text", commentText);
 
-            GetResponseAsync<NoResponse>(parameters, callback);
+            return await GetResponseAsync<NoResponse>(parameters);
 
         }
 
@@ -85,9 +82,9 @@ namespace FlickrNet
         /// Return the list of photos belonging to your contacts that have been commented on recently.
         /// </summary>
         /// <returns></returns>
-        public void PhotosCommentsGetRecentForContactsAsync(Action<FlickrResult<PhotoCollection>> callback)
+        public async Task<FlickrResult<PhotoCollection>> PhotosCommentsGetRecentForContactsAsync()
         {
-            PhotosCommentsGetRecentForContactsAsync(DateTime.MinValue, null, PhotoSearchExtras.None, 0, 0, callback);
+            return await PhotosCommentsGetRecentForContactsAsync(DateTime.MinValue, null, PhotoSearchExtras.None, 0, 0);
         }
 
         /// <summary>
@@ -96,10 +93,10 @@ namespace FlickrNet
         /// <param name="page">The page of results to return. If this argument is omitted, it defaults to 1.</param>
         /// <param name="perPage">Number of photos to return per page. If this argument is omitted, it defaults to 100.
         ///  The maximum allowed value is 500.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosCommentsGetRecentForContactsAsync(int page, int perPage, Action<FlickrResult<PhotoCollection>> callback)
+       
+        public async Task<FlickrResult<PhotoCollection>> PhotosCommentsGetRecentForContactsAsync(int page, int perPage)
         {
-            PhotosCommentsGetRecentForContactsAsync(DateTime.MinValue, null, PhotoSearchExtras.None, page, perPage, callback);
+            return await PhotosCommentsGetRecentForContactsAsync(DateTime.MinValue, null, PhotoSearchExtras.None, page, perPage);
         }
 
         /// <summary>
@@ -111,11 +108,11 @@ namespace FlickrNet
         /// <param name="page">The page of results to return. If this argument is omitted, it defaults to 1.</param>
         /// <param name="perPage">Number of photos to return per page. If this argument is omitted, it defaults to 100. 
         /// The maximum allowed value is 500.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosCommentsGetRecentForContactsAsync(DateTime dateLastComment, PhotoSearchExtras extras, int page,
-                                                            int perPage, Action<FlickrResult<PhotoCollection>> callback)
+       
+        public async Task<FlickrResult<PhotoCollection>> PhotosCommentsGetRecentForContactsAsync(DateTime dateLastComment, PhotoSearchExtras extras, int page,
+                                                            int perPage)
         {
-            PhotosCommentsGetRecentForContactsAsync(dateLastComment, null, extras, page, perPage, callback);
+            return await PhotosCommentsGetRecentForContactsAsync(dateLastComment, null, extras, page, perPage);
         }
 
         /// <summary>
@@ -128,10 +125,9 @@ namespace FlickrNet
         /// <param name="page">The page of results to return. If this argument is omitted, it defaults to 1.</param>
         /// <param name="perPage">Number of photos to return per page. If this argument is omitted, it defaults to 100. 
         /// The maximum allowed value is 500.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosCommentsGetRecentForContactsAsync(DateTime dateLastComment, string[] contactsFilter,
-                                                            PhotoSearchExtras extras, int page, int perPage,
-                                                            Action<FlickrResult<PhotoCollection>> callback)
+       
+        public async Task<FlickrResult<PhotoCollection>> PhotosCommentsGetRecentForContactsAsync(DateTime dateLastComment, string[] contactsFilter,
+                                                            PhotoSearchExtras extras, int page, int perPage)
         {
             CheckRequiresAuthentication();
 
@@ -146,7 +142,7 @@ namespace FlickrNet
             if (perPage > 0)
                 parameters.Add("per_page", perPage.ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
 
-            GetResponseAsync<PhotoCollection>(parameters, callback);
+            return await GetResponseAsync<PhotoCollection>(parameters);
         }
     }
 }

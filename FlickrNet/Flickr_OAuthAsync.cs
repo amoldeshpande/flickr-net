@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace FlickrNet
 {
@@ -11,8 +13,8 @@ namespace FlickrNet
         /// </summary>
         /// <remarks>Specify 'oob' as the callback url for no callback to be performed.</remarks>
         /// <param name="callbackUrl">The callback Uri, or 'oob' if no callback is to be performed.</param>
-        /// <param name="callback"></param>
-        public void OAuthGetRequestTokenAsync(string callbackUrl, Action<FlickrResult<OAuthRequestToken>> callback)
+       
+        public async Task<FlickrResult<OAuthRequestToken>> OAuthGetRequestTokenAsync(string callbackUrl)
         {
             CheckApiKey();
 
@@ -30,26 +32,23 @@ namespace FlickrNet
 
             parameters.Add("oauth_signature", sig);
 
-            FlickrResponder.GetDataResponseAsync(this, url, parameters, (r) =>
+            var r = await FlickrResponder.GetDataResponseAsync(this, url, parameters);
+            var result = new FlickrResult<OAuthRequestToken>();
+            if (r.Error != null)
             {
-                var result = new FlickrResult<OAuthRequestToken>();
-                if (r.Error != null)
+                if (r.Error is HttpRequestException)
                 {
-                    if (r.Error is System.Net.WebException)
-                    {
-                        var ex = new OAuthException(r.Error);
-                        result.Error = ex;
-                    }
-                    else
-                    {
-                        result.Error = r.Error;
-                    }
-                    callback(result);
-                    return;
+                    var ex = new OAuthException(r.Error);
+                    result.Error = ex;
                 }
-                result.Result = FlickrNet.OAuthRequestToken.ParseResponse(r.Result);
-                callback(result);
-            });
+                else
+                {
+                    result.Error = r.Error;
+                }
+                return (result);
+            }
+            result.Result = FlickrNet.OAuthRequestToken.ParseResponse(r.Result);
+            return (result);
         }
 
         /// <summary>
@@ -57,10 +56,10 @@ namespace FlickrNet
         /// </summary>
         /// <param name="requestToken"></param>
         /// <param name="verifier"></param>
-        /// <param name="callback"></param>
-        public void OAuthGetAccessTokenAsync(OAuthRequestToken requestToken, string verifier, Action<FlickrResult<OAuthAccessToken>> callback)
+       
+        public async Task<FlickrResult<OAuthAccessToken>> OAuthGetAccessTokenAsync(OAuthRequestToken requestToken, string verifier)
         {
-            OAuthGetAccessTokenAsync(requestToken.Token, requestToken.TokenSecret, verifier, callback);
+return await             OAuthGetAccessTokenAsync(requestToken.Token, requestToken.TokenSecret, verifier);
         }
 
         /// <summary>
@@ -69,8 +68,8 @@ namespace FlickrNet
         /// <param name="requestToken"></param>
         /// <param name="requestTokenSecret"></param>
         /// <param name="verifier"></param>
-        /// <param name="callback"></param>
-        public void OAuthGetAccessTokenAsync(string requestToken, string requestTokenSecret, string verifier, Action<FlickrResult<OAuthAccessToken>> callback)
+       
+        public async Task<FlickrResult<OAuthAccessToken>> OAuthGetAccessTokenAsync(string requestToken, string requestTokenSecret, string verifier)
         {
             CheckApiKey();
 
@@ -89,27 +88,24 @@ namespace FlickrNet
 
             parameters.Add("oauth_signature", sig);
 
-            FlickrResponder.GetDataResponseAsync(this, url, parameters, (r) =>
+            var r = await FlickrResponder.GetDataResponseAsync(this, url, parameters);
+            var result = new FlickrResult<OAuthAccessToken>();
+            if (r.Error != null)
+            {
+                if (r.Error is HttpRequestException)
                 {
-                    var result = new FlickrResult<OAuthAccessToken>();
-                    if (r.Error != null)
-                    {
-                        if (r.Error is System.Net.WebException)
-                        {
-                            var ex = new OAuthException(r.Error);
-                            result.Error = ex;
-                        }
-                        else
-                        {
-                            result.Error = r.Error;
-                        }
+                    var ex = new OAuthException(r.Error);
+                    result.Error = ex;
+                }
+                else
+                {
+                    result.Error = r.Error;
+                }
 
-                        callback(result);
-                        return;
-                    }
-                    result.Result = FlickrNet.OAuthAccessToken.ParseResponse(r.Result);
-                    callback(result);
-                });
+                return (result);
+            }
+            result.Result = FlickrNet.OAuthAccessToken.ParseResponse(r.Result);
+            return (result);
         }
 
 

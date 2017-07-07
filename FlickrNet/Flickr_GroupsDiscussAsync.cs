@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace FlickrNet
 {
@@ -11,8 +12,8 @@ namespace FlickrNet
         /// </summary>
         /// <param name="topicId">The id of the topic to add the reply to.</param>
         /// <param name="message">The message content to add.</param>
-        /// <param name="callback"></param>
-        public void GroupsDiscussRepliesAddAsync(string topicId, string message, Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> GroupsDiscussRepliesAddAsync(string topicId, string message)
         {
             CheckRequiresAuthentication();
 
@@ -24,7 +25,7 @@ namespace FlickrNet
             parameters.Add("topic_id", topicId);
             parameters.Add("message", message);
 
-            GetResponseAsync<NoResponse>(parameters, callback);
+            return await GetResponseAsync<NoResponse>(parameters);
         }
 
         /// <summary>
@@ -32,8 +33,8 @@ namespace FlickrNet
         /// </summary>
         /// <param name="topicId">The id of the topic to delete the reply from.</param>
         /// <param name="replyId">The id of the reply to delete.</param>
-        /// <param name="callback"></param>
-        public void GroupsDiscussRepliesDeleteAsync(string topicId, string replyId, Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> GroupsDiscussRepliesDeleteAsync(string topicId, string replyId)
         {
             CheckRequiresAuthentication();
 
@@ -45,7 +46,7 @@ namespace FlickrNet
             parameters.Add("topic_id", topicId);
             parameters.Add("reply_id", replyId);
 
-            GetResponseAsync<NoResponse>(parameters, callback);
+            return await GetResponseAsync<NoResponse>(parameters);
         }
 
         /// <summary>
@@ -54,8 +55,8 @@ namespace FlickrNet
         /// <param name="topicId">The id of the topic whose reply you want to edit.</param>
         /// <param name="replyId">The id of the reply to edit.</param>
         /// <param name="message">The new message content to replace the reply with.</param>
-        /// <param name="callback"></param>
-        public void GroupsDiscussRepliesEditAsync(string topicId, string replyId, string message, Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> GroupsDiscussRepliesEditAsync(string topicId, string replyId, string message)
         {
             CheckRequiresAuthentication();
 
@@ -69,7 +70,7 @@ namespace FlickrNet
             parameters.Add("reply_id", replyId);
             parameters.Add("message", message);
 
-            GetResponseAsync<NoResponse>(parameters, callback);
+            return await GetResponseAsync<NoResponse>(parameters);
         }
 
         /// <summary>
@@ -77,8 +78,8 @@ namespace FlickrNet
         /// </summary>
         /// <param name="topicId">The id of the topic for whose reply you want the details of.</param>
         /// <param name="replyId">The id of the reply you want the details of.</param>
-        /// <param name="callback"></param>
-        public void GroupsDiscussRepliesGetInfoAsync(string topicId, string replyId, Action<FlickrResult<TopicReply>> callback)
+       
+        public async Task<FlickrResult<TopicReply>> GroupsDiscussRepliesGetInfoAsync(string topicId, string replyId)
         {
             if (string.IsNullOrEmpty(topicId)) throw new ArgumentNullException("topicId");
             if (string.IsNullOrEmpty(replyId)) throw new ArgumentNullException("replyId");
@@ -88,7 +89,7 @@ namespace FlickrNet
             parameters.Add("topic_id", topicId);
             parameters.Add("reply_id", replyId);
 
-            GetResponseAsync<TopicReply>(parameters, callback);
+            return await GetResponseAsync<TopicReply>(parameters);
         }
 
         /// <summary>
@@ -97,8 +98,8 @@ namespace FlickrNet
         /// <param name="topicId">The id of the topic to get the replies for.</param>
         /// <param name="page">The page of replies you wish to get.</param>
         /// <param name="perPage">The number of replies per page you wish to get.</param>
-        /// <param name="callback"></param>
-        public void GroupsDiscussRepliesGetListAsync(string topicId, int page, int perPage, Action<FlickrResult<TopicReplyCollection>> callback)
+       
+        public async Task<FlickrResult<TopicReplyCollection>> GroupsDiscussRepliesGetListAsync(string topicId, int page, int perPage)
         {
             if (string.IsNullOrEmpty(topicId)) throw new ArgumentNullException("topicId");
 
@@ -108,7 +109,7 @@ namespace FlickrNet
             if (page > 0) parameters.Add("page", page.ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
             if (perPage > 0) parameters.Add("per_page", perPage.ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
 
-            GetResponseAsync<TopicReplyCollection>(parameters, callback);
+            return await GetResponseAsync<TopicReplyCollection>(parameters);
         }
 
         /// <summary>
@@ -117,8 +118,8 @@ namespace FlickrNet
         /// <param name="groupId">The id of the group to add a new topic too.</param>
         /// <param name="subject">The subject line of the new topic.</param>
         /// <param name="message">The message content of the new topic.</param>
-        /// <param name="callback"></param>
-        public void GroupsDiscussTopicsAddAsync(string groupId, string subject, string message, Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> GroupsDiscussTopicsAddAsync(string groupId, string subject, string message)
         {
             CheckRequiresAuthentication();
 
@@ -132,7 +133,7 @@ namespace FlickrNet
             parameters.Add("subject", subject);
             parameters.Add("message", message);
 
-            GetResponseAsync<NoResponse>(parameters, callback);
+            return await GetResponseAsync<NoResponse>(parameters);
         }
 
         /// <summary>
@@ -141,8 +142,8 @@ namespace FlickrNet
         /// <param name="groupId">The id of the group.</param>
         /// <param name="page">The page of topics you wish to return.</param>
         /// <param name="perPage">The number of topics per page to return.</param>
-        /// <param name="callback"></param>
-        public void GroupsDiscussTopicsGetListAsync(string groupId, int page, int perPage, Action<FlickrResult<TopicCollection>> callback)
+       
+        public async Task<FlickrResult<TopicCollection>> GroupsDiscussTopicsGetListAsync(string groupId, int page, int perPage)
         {
             if (string.IsNullOrEmpty(groupId)) throw new ArgumentNullException("groupId");
 
@@ -152,15 +153,15 @@ namespace FlickrNet
             if (page > 0) parameters.Add("page", page.ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
             if (perPage > 0) parameters.Add("per_page", perPage.ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
 
-            GetResponseAsync<TopicCollection>(parameters, callback);
+            return await GetResponseAsync<TopicCollection>(parameters);
         }
 
         /// <summary>
         /// Gets information on a particular topic with a group.
         /// </summary>
         /// <param name="topicId">The id of the topic you with information on.</param>
-        /// <param name="callback"></param>
-        public void GroupsDiscussTopicsGetInfoAsync(string topicId, Action<FlickrResult<Topic>> callback)
+       
+        public async Task<FlickrResult<Topic>> GroupsDiscussTopicsGetInfoAsync(string topicId)
         {
             if (string.IsNullOrEmpty(topicId)) throw new ArgumentNullException("topicId");
 
@@ -168,7 +169,7 @@ namespace FlickrNet
             parameters.Add("method", "flickr.groups.discuss.topics.getInfo");
             parameters.Add("topic_id", topicId);
 
-            GetResponseAsync<Topic>(parameters, callback);
+            return await GetResponseAsync<Topic>(parameters);
         }
 
     }

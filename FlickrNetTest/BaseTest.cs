@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using FlickrNet;
 using NUnit.Framework;
-using NUnit.Framework.Interfaces;
 
 namespace FlickrNetTest
 {
-    [TestFixture]
-    public class BaseTest
+    public class BaseTest : IDisposable
     {
         Flickr _instance;
         Flickr _authInstance;
@@ -41,8 +39,8 @@ namespace FlickrNetTest
             get { return _authInstance != null; }
         }
 
-        [SetUp]
-        public void InitialiseLoggingAndFlickr()
+        //public void InitialiseLoggingAndFlickr()
+        protected BaseTest()
         {
             _instance = null;
             _authInstance = null;
@@ -55,12 +53,12 @@ namespace FlickrNetTest
             _errorLog.Add(key, information);
         }
 
-        [TearDown]
-        public void ErrorLogging()
+        //public void ErrorLogging()
+        public void Dispose()
         {
-            if( (_testCount % 10) > 0 ) System.Threading.Thread.Sleep(200);
+            if ((_testCount % 10) > 0) System.Threading.Thread.Sleep(200);
 
-            if (TestContext.CurrentContext.Result.Outcome.Status != TestStatus.Failed) return;
+            //if (TestContext.CurrentContext.Result.Outcome.Status != TestStatus.Failed) return;
 
             if (InstanceUsed)
             {
@@ -69,7 +67,7 @@ namespace FlickrNetTest
             }
             if (AuthInstanceUsed)
             {
-                Console.WriteLine("LastRequest (Auth): " +_authInstance.LastRequest);
+                Console.WriteLine("LastRequest (Auth): " + _authInstance.LastRequest);
                 Console.WriteLine(_authInstance.LastResponse);
             }
 

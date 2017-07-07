@@ -5,8 +5,7 @@ using FlickrNet;
 using System.IO;
 using System.Net;
 using System.Linq;
-using System.Reactive.Subjects;
-using System.Reactive.Linq;
+using System.Threading.Tasks;
 
 namespace FlickrNetTest
 {
@@ -18,11 +17,9 @@ namespace FlickrNetTest
     public class PhotosUploadTests : BaseTest
     {
         [Test]
-        public void UploadPictureAsyncBasicTest()
+        public async Task UploadPictureAsyncBasicTest()
         {
             Flickr f = AuthInstance;
-
-            var w = new AsyncSubject<FlickrResult<string>>();
 
             byte[] imageBytes = TestData.TestImageBytes;
             var s = new MemoryStream(imageBytes);
@@ -32,10 +29,7 @@ namespace FlickrNetTest
             string desc = "Test Description\nSecond Line";
             string tags = "testtag1,testtag2";
 
-            f.UploadPictureAsync(s, "Test.jpg", title, desc, tags, false, false, false, ContentType.Other, SafetyLevel.Safe, HiddenFromSearch.Visible,
-                r => { w.OnNext(r); w.OnCompleted(); });
-
-            var result = w.Next().First();
+            var result = await f.UploadPictureAsync(s, "Test.jpg", title, desc, tags, false, false, false, ContentType.Other, SafetyLevel.Safe, HiddenFromSearch.Visible);
 
             if (result.HasError)
             {
@@ -54,9 +48,9 @@ namespace FlickrNetTest
         {
             Flickr f = AuthInstance;
 
-            f.OnUploadProgress += (sender, args) => {
-                // Do nothing
-            };
+            //f.OnUploadProgress += (sender, args) => {
+            //    // Do nothing
+            //};
 
             byte[] imageBytes = TestData.TestImageBytes;
             var s = new MemoryStream(imageBytes);

@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Xml;
 
 namespace FlickrNet
 {
     public partial class Flickr
     {
+
         /// <summary>
         /// Uploads a file to Flickr.
         /// </summary>
@@ -172,41 +174,22 @@ namespace FlickrNet
 
             var authHeader = FlickrResponder.OAuthCalculateAuthHeader(parameters);
             var dataBuffer = CreateUploadData(imageStream, fileName, parameters, boundary);
-            
-            var req = (HttpWebRequest)WebRequest.Create(uploadUri);
-            req.Method = "POST";
-#if !SILVERLIGHT && !DOTNETSTANDARD
-            if (Proxy != null) req.Proxy = Proxy;
-#endif
-            req.Timeout = HttpTimeout;
-            req.ContentType = "multipart/form-data; boundary=" + boundary;
 
+            var req = new HttpRequestMessage(new HttpMethod("POST"), uploadUri);
+            var ms = new MemoryStream();
+            dataBuffer.CopyTo(ms);
+            ms.Seek(0, SeekOrigin.Begin);
+            req.Content = new StreamContent(ms);
+            req.Content.Headers.Add("Content-Type", "multipart/form-data; boundary=" + boundary);
             if (!string.IsNullOrEmpty(authHeader))
             {
-                req.Headers["Authorization"] = authHeader;
+                req.Headers.Add("Authorization", authHeader);
             }
 
-            req.AllowWriteStreamBuffering = false;
-            req.SendChunked = true;
-            //req.ContentLength = dataBuffer.Length;
+            var res = httpClient.SendAsync(req).Result;
 
-            using (var reqStream = req.GetRequestStream())
-            {
-                var bufferSize = 32 * 1024;
-                if (dataBuffer.Length / 100 > bufferSize) bufferSize = bufferSize * 2;
-                dataBuffer.UploadProgress += (o, e) => { if( OnUploadProgress != null ) OnUploadProgress(this, e); };
-                dataBuffer.CopyTo(reqStream, bufferSize);
-                reqStream.Flush();
-            }
-
-            var res = (HttpWebResponse)req.GetResponse();
-            var stream = res.GetResponseStream();
-            if( stream == null) throw new FlickrWebException("Unable to retrieve stream from web response.");
-
-            var sr = new StreamReader(stream);
-            var s = sr.ReadToEnd();
-            sr.Close();
-            return s;
+            res.EnsureSuccessStatusCode();
+            return res.Content.ReadAsStringAsync().Result;
         }
 
         /// <summary>

@@ -108,17 +108,10 @@ namespace FlickrNet
 
         private static string DownloadData(string method, string baseUrl, string data, string contentType, string authHeader)
         {
-            Mutex mute = new Mutex();
-            String resString = String.Empty;
-            DownloadDataAsync(method, baseUrl, data, contentType, authHeader, (FlickrResult<String> result) =>
-                     {
-                         mute.ReleaseMutex();
-                         resString = result.Result;
-                     });
-            mute.WaitOne();
-
-            return resString;
-
+            var task = DownloadDataAsync(method, baseUrl, data, contentType, authHeader);
+            task.Wait();
+            var result = task.Result;
+            return  result.Result;
         }
 
     }

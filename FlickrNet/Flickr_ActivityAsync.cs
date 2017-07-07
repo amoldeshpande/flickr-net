@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Collections;
 using System.Xml;
+using System.Threading.Tasks;
 
 namespace FlickrNet
 {
@@ -14,10 +15,9 @@ namespace FlickrNet
         /// <remarks>
         /// <b>Do not poll this method more than once an hour.</b>
         /// </remarks>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void ActivityUserPhotosAsync(Action<FlickrResult<ActivityItemCollection>> callback)
+        public async Task<FlickrResult<ActivityItemCollection>> ActivityUserPhotosAsync()
         {
-            ActivityUserPhotosAsync(null, 0, 0, callback);
+            return await ActivityUserPhotosAsync(null, 0, 0);
         }
 
         /// <summary>
@@ -28,10 +28,9 @@ namespace FlickrNet
         /// </remarks>
         /// <param name="page">The page numver of the activity to return.</param>
         /// <param name="perPage">The number of activities to return per page.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void ActivityUserPhotosAsync(int page, int perPage, Action<FlickrResult<ActivityItemCollection>> callback)
+        public async Task<FlickrResult<ActivityItemCollection>> ActivityUserPhotosAsync(int page, int perPage)
         {
-            ActivityUserPhotosAsync(null, page, perPage, callback);
+            return await ActivityUserPhotosAsync(null, page, perPage);
         }
 
         /// <summary>
@@ -42,10 +41,9 @@ namespace FlickrNet
         /// </remarks>
         /// <param name="timePeriod">The number of days or hours you want to get activity for.</param>
         /// <param name="timeType">'d' for days, 'h' for hours.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void ActivityUserPhotosAsync(int timePeriod, string timeType, Action<FlickrResult<ActivityItemCollection>> callback)
+        public async Task<FlickrResult<ActivityItemCollection>> ActivityUserPhotosAsync(int timePeriod, string timeType)
         {
-            ActivityUserPhotosAsync(timePeriod, timeType, 0, 0, callback);
+            return await ActivityUserPhotosAsync(timePeriod, timeType, 0, 0);
         }
 
         /// <summary>
@@ -58,8 +56,7 @@ namespace FlickrNet
         /// <param name="timeType">'d' for days, 'h' for hours.</param>
         /// <param name="page">The page numver of the activity to return.</param>
         /// <param name="perPage">The number of activities to return per page.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void ActivityUserPhotosAsync(int timePeriod, string timeType, int page, int perPage, Action<FlickrResult<ActivityItemCollection>> callback)
+        public async Task<FlickrResult<ActivityItemCollection>> ActivityUserPhotosAsync(int timePeriod, string timeType, int page, int perPage )
         {
             if (timePeriod == 0)
                 throw new ArgumentOutOfRangeException("timePeriod", "Time Period should be greater than 0");
@@ -70,10 +67,10 @@ namespace FlickrNet
             if (timeType != "d" && timeType != "h")
                 throw new ArgumentOutOfRangeException("timeType", "Time type must be 'd' or 'h'");
 
-            ActivityUserPhotosAsync(timePeriod + timeType, page, perPage, callback);
+            return await ActivityUserPhotosAsync(timePeriod + timeType, page, perPage);
         }
 
-        private void ActivityUserPhotosAsync(string timeframe, int page, int perPage, Action<FlickrResult<ActivityItemCollection>> callback)
+        private async Task<FlickrResult<ActivityItemCollection>> ActivityUserPhotosAsync(string timeframe, int page, int perPage)
         {
             CheckRequiresAuthentication();
 
@@ -83,7 +80,7 @@ namespace FlickrNet
             if (page > 0) parameters.Add("page", page.ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
             if (perPage > 0) parameters.Add("per_page", perPage.ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
 
-            GetResponseAsync<ActivityItemCollection>(parameters, callback);
+            return await GetResponseAsync<ActivityItemCollection>(parameters);
         }
 
         /// <summary>
@@ -94,8 +91,7 @@ namespace FlickrNet
         /// </remarks>
         /// <param name="page">The page of the activity to return.</param>
         /// <param name="perPage">The number of activities to return per page.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void ActivityUserCommentsAsync(int page, int perPage, Action<FlickrResult<ActivityItemCollection>> callback)
+        public async Task<FlickrResult<ActivityItemCollection>> ActivityUserCommentsAsync(int page, int perPage)
         {
             CheckRequiresAuthentication();
 
@@ -104,7 +100,7 @@ namespace FlickrNet
             if (page > 0) parameters.Add("page", page.ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
             if (perPage > 0) parameters.Add("per_page", perPage.ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
 
-            GetResponseAsync<ActivityItemCollection>(parameters, callback);
+            return await GetResponseAsync<ActivityItemCollection>(parameters);
         }
 
 

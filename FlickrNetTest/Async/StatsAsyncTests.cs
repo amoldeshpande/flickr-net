@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using FlickrNet;
-using System.Reactive.Subjects;
-using System.Reactive.Linq;
 using Shouldly;
+using System.Threading.Tasks;
 
 namespace FlickrNetTest.Async
 {
@@ -14,64 +13,53 @@ namespace FlickrNetTest.Async
     public class StatsAsyncTests : BaseTest
     {
         [Test]
-        public void StatsGetCollectionDomainsAsyncTest()
+        public async Task StatsGetCollectionDomainsAsyncTest()
         {
             Flickr f = AuthInstance;
 
             DateTime d = DateTime.Today.AddDays(-7);
 
-            var w = new AsyncSubject<FlickrResult<StatDomainCollection>>();
-            f.StatsGetCollectionDomainsAsync(d, 1, 25, r => { w.OnNext(r); w.OnCompleted(); });
+            var result = await f.StatsGetCollectionDomainsAsync(d, 1, 25);
 
-            var result = w.Next().First();
             Assert.IsFalse(result.HasError);
         }
 
         [Test]
-        public void StatsGetPhotoDomainsAsyncTest()
+        public async Task StatsGetPhotoDomainsAsyncTest()
         {
             Flickr f = AuthInstance;
 
             DateTime d = DateTime.Today.AddDays(-7);
 
-            var w = new AsyncSubject<FlickrResult<StatDomainCollection>>();
-            f.StatsGetPhotoDomainsAsync(d, 1, 25, r => { w.OnNext(r); w.OnCompleted(); });
-
-            var result = w.Next().First();
+            var result = await f.StatsGetPhotoDomainsAsync(d, 1, 25);
             Assert.IsFalse(result.HasError);
         }
 
         [Test]
-        public void StatsGetPhotostreamDomainsAsyncTest()
+        public async Task StatsGetPhotostreamDomainsAsyncTest()
         {
             Flickr f = AuthInstance;
 
             DateTime d = DateTime.Today.AddDays(-7);
 
-            var w = new AsyncSubject<FlickrResult<StatDomainCollection>>();
-            f.StatsGetPhotostreamDomainsAsync(d, 1, 25, r => { w.OnNext(r); w.OnCompleted(); });
-
-            var result = w.Next().First();
+            var result = await f.StatsGetPhotostreamDomainsAsync(d, 1, 25);
             Assert.IsFalse(result.HasError);
         }
 
         [Test]
-        public void StatsGetPhotosetDomainsAsyncTest()
+        public async Task StatsGetPhotosetDomainsAsyncTest()
         {
             Flickr f = AuthInstance;
 
             DateTime d = DateTime.Today.AddDays(-7);
 
-            var w = new AsyncSubject<FlickrResult<StatDomainCollection>>();
-            f.StatsGetPhotosetDomainsAsync(d, 1, 25, r => { w.OnNext(r); w.OnCompleted(); });
-
-            var result = w.Next().First();
+            var result = await f.StatsGetPhotosetDomainsAsync(d, 1, 25);
             Assert.IsFalse(result.HasError);
         }
 
 
         [Test]
-        public void StatsGetCollectionStatsAsyncTest()
+        public async Task StatsGetCollectionStatsAsyncTest()
         {
             Flickr f = AuthInstance;
 
@@ -79,16 +67,14 @@ namespace FlickrNetTest.Async
 
             DateTime d = DateTime.Today.AddDays(-7);
 
-            var w = new AsyncSubject<FlickrResult<Stats>>();
-            f.StatsGetCollectionStatsAsync(d, collection.CollectionId, r => { w.OnNext(r); w.OnCompleted(); });
+            var result = await f.StatsGetCollectionStatsAsync(d, collection.CollectionId);
 
-            var result = w.Next().First();
             Assert.IsFalse(result.HasError);
 
         }
 
         [Test]
-        public void StatsGetPhotoStatsAsyncTest()
+        public async Task StatsGetPhotoStatsAsyncTest()
         {
             Flickr.CacheDisabled = true;
 
@@ -96,17 +82,14 @@ namespace FlickrNetTest.Async
 
             DateTime d = DateTime.Today.AddDays(-7);
 
-            var w = new AsyncSubject<FlickrResult<Stats>>();
-            f.StatsGetPhotoStatsAsync(d, "7176125763", r => { w.OnNext(r); w.OnCompleted(); });
-
-            var result = w.Next().First();
+            var result = await f.StatsGetPhotoStatsAsync(d, "7176125763");
             if (result.HasError) throw result.Error;
 
             Assert.IsFalse(result.HasError);
         }
 
         [Test]
-        public void StatsGetPhotostreamStatsAsyncTest()
+        public async Task StatsGetPhotostreamStatsAsyncTest()
         {
             Flickr f = AuthInstance;
 
@@ -117,10 +100,7 @@ namespace FlickrNetTest.Async
             {
                 var d = DateTime.Today.AddDays(-i);
 
-                var w = new AsyncSubject<FlickrResult<Stats>>();
-                f.StatsGetPhotostreamStatsAsync(d, r => { w.OnNext(r); w.OnCompleted(); });
-
-                var result = w.Next().First();
+                var result = await f.StatsGetPhotostreamStatsAsync(d);
 
                 result.HasError.ShouldBe(false);
                 result.Result.ShouldNotBe(null);

@@ -11,43 +11,14 @@ namespace FlickrNet
 {
     public static partial class FlickrResponder
     {
-        struct QueueItem
-        {
-            public HttpRequestMessage request;
-            public Action<HttpResponseMessage> callback;
-        }
-        static BlockingCollection<QueueItem> taskQueue;
+
         static HttpClient httpClient;
-        static Task backGroundTask; 
         static FlickrResponder()
         {
             httpClient = new HttpClient();
-            taskQueue = new BlockingCollection<QueueItem>();
-            backGroundTask = new Task(
-                async () =>
-                {
-                    while(!taskQueue.IsCompleted)
-                    {
-                        try
-                        {
-                            var tsk = taskQueue.Take();
-                            var response = await httpClient.SendAsync(tsk.request);
-                            tsk.callback(response);
-                        }
-                        catch
-                        {
-
-                        }
-                    }
-                }
-                );
-            backGroundTask.Start();
-
         }
         static void CleanUp()
         {
-            taskQueue.CompleteAdding();
-            backGroundTask.Wait();
             httpClient.Dispose();
         }
 
@@ -58,19 +29,19 @@ namespace FlickrNet
         /// <param name="flickr">The current instance of the <see cref="Flickr"/> class.</param>
         /// <param name="baseUrl">The base url to be called.</param>
         /// <param name="parameters">A dictionary of parameters.</param>
-        /// <param name="callback"></param>
+       
         /// <returns></returns>
-        public static void GetDataResponseAsync(Flickr flickr, string baseUrl, Dictionary<string, string> parameters, Action<FlickrResult<string>> callback)
+        public static async Task<FlickrResult<string>> GetDataResponseAsync(Flickr flickr, string baseUrl, Dictionary<string, string> parameters)
         {
             bool oAuth = parameters.ContainsKey("oauth_consumer_key");
 
             if (oAuth)
-                GetDataResponseOAuthAsync(flickr, baseUrl, parameters, callback);
+                return await GetDataResponseOAuthAsync(flickr, baseUrl, parameters);
             else
-                GetDataResponseNormalAsync(flickr, baseUrl, parameters, callback);
+                return await GetDataResponseNormalAsync(flickr, baseUrl, parameters);
         }
 
-        private static void GetDataResponseNormalAsync(Flickr flickr, string baseUrl, Dictionary<string, string> parameters, Action<FlickrResult<string>> callback) 
+        private static async Task<FlickrResult<string>> GetDataResponseNormalAsync(Flickr flickr, string baseUrl, Dictionary<string, string> parameters)
         {
             var method = flickr.CurrentService == SupportedService.Zooomr ? "GET" : "POST";
 
@@ -84,12 +55,12 @@ namespace FlickrNet
             if (method == "GET" && data.Length > 2000) method = "POST";
 
             if (method == "GET")
-                DownloadDataAsync(method, baseUrl + "?" + data, null, null, null, callback);
+                return await DownloadDataAsync(method, baseUrl + "?" + data, null, null, null);
             else
-                DownloadDataAsync(method, baseUrl, data, PostContentType, null, callback);
+                return await DownloadDataAsync(method, baseUrl, data, PostContentType, null);
         }
 
-        private static void GetDataResponseOAuthAsync(Flickr flickr, string baseUrl, Dictionary<string, string> parameters, Action<FlickrResult<string>> callback)
+        private static async Task<FlickrResult<string>> GetDataResponseOAuthAsync(Flickr flickr, string baseUrl, Dictionary<string, string> parameters)
         {
             const string method = "POST";
 
@@ -115,7 +86,7 @@ namespace FlickrNet
             // Download data.
             try
             {
-                DownloadDataAsync(method, baseUrl, data, PostContentType, authHeader, callback);
+                return await DownloadDataAsync(method, baseUrl, data, PostContentType, authHeader);
             }
             catch (HttpRequestException ex)
             {
@@ -134,41 +105,36 @@ namespace FlickrNet
             }
         }
 
-        private static void DownloadDataAsync(string method, string baseUrl, string data, string contentType, string authHeader, Action<FlickrResult<string>> callback)
+        private static async Task<FlickrResult<string>> DownloadDataAsync(string method, string baseUrl, string data, string contentType, string authHeader)
         {
             HttpRequestMessage request = new HttpRequestMessage(new HttpMethod(method), baseUrl);
+            FlickrResult<String> result = new FlickrResult<string>();
 
-            if ((data!= null) && (data.Length > 0))
+            if ((data != null) && (data.Length > 0))
             {
                 request.Content = new StringContent(data);
             }
 
-            if (!string.IsNullOrEmpty(contentType)) request.Content.Headers.Add("Content-Type", contentType);
+            if (!string.IsNullOrEmpty(contentType))
+            {
+                request.Content.Headers.Remove("Content-Type");
+                request.Content.Headers.Add("Content-Type", contentType);
+            }
             if (!string.IsNullOrEmpty(authHeader)) request.Headers.Add("Authorization", authHeader);
 
-            taskQueue.Add(new QueueItem()
+            var resp = await httpClient.SendAsync(request);
+            try
             {
-                request = request,
-                callback = async (HttpResponseMessage resp) =>
-                {
-                    var result = new FlickrResult<string>();
-                    try
-                    {
-                        resp.EnsureSuccessStatusCode();
-                    }
-                    catch (Exception e)
-                    {
-                        result.Error = e;
-                        callback(result);
-                        return;
-                    }
+                resp.EnsureSuccessStatusCode();
+            }
+            catch (Exception e)
+            {
+                result.Error = e;
+                return result;
+            }
+            result.Result = await resp.Content.ReadAsStringAsync();
+            return result;
 
-                    result.Result = await resp.Content.ReadAsStringAsync();
-                    callback(result);
-                    return;
-                }
-            });
-            
         }
     }
 }

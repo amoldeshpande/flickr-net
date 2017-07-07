@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Collections;
+using System.Threading.Tasks;
 
 namespace FlickrNet
 {
@@ -20,8 +21,8 @@ namespace FlickrNet
         /// Defaults to 16 if not specified.</param>
         /// <param name="placeId">A Flickr Places ID. (While optional, you must pass either a valid Places ID or a WOE ID.)</param>
         /// <param name="woeId">A Where On Earth (WOE) ID. (While optional, you must pass either a valid Places ID or a WOE ID.)</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosGeoBatchCorrectLocationAsync(double latitude, double longitude, GeoAccuracy accuracy, string placeId, string woeId, Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> PhotosGeoBatchCorrectLocationAsync(double latitude, double longitude, GeoAccuracy accuracy, string placeId, string woeId)
         {
             CheckRequiresAuthentication();
 
@@ -33,7 +34,7 @@ namespace FlickrNet
             parameters.Add("place_id", placeId);
             parameters.Add("woe_id", woeId);
 
-            GetResponseAsync<NoResponse>(parameters, callback);
+            return await GetResponseAsync<NoResponse>(parameters);
         }
 
         /// <summary>
@@ -42,8 +43,8 @@ namespace FlickrNet
         /// <param name="photoId">The ID of the photo whose WOE location is being corrected.</param>
         /// <param name="placeId">A Flickr Places ID. (While optional, you must pass either a valid Places ID or a WOE ID.)</param>
         /// <param name="woeId">A Where On Earth (WOE) ID. (While optional, you must pass either a valid Places ID or a WOE ID.)</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosGeoCorrectLocationAsync(string photoId, string placeId, string woeId, Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> PhotosGeoCorrectLocationAsync(string photoId, string placeId, string woeId)
         {
             CheckRequiresAuthentication();
 
@@ -53,45 +54,41 @@ namespace FlickrNet
             parameters.Add("place_id", placeId);
             parameters.Add("woe_id", woeId);
 
-            GetResponseAsync<NoResponse>(parameters, callback);
+            return await GetResponseAsync<NoResponse>(parameters);
         }
 
         /// <summary>
         /// Returns the location data for a give photo.
         /// </summary>
         /// <param name="photoId">The ID of the photo to return the location information for.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosGeoGetLocationAsync(string photoId, Action<FlickrResult<PlaceInfo>> callback)
+       
+        public async Task<FlickrResult<PlaceInfo>> PhotosGeoGetLocationAsync(string photoId)
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.photos.geo.getLocation");
             parameters.Add("photo_id", photoId);
 
-            GetResponseAsync<PhotoInfo>(
-                parameters,
-                r =>
+            var r = await GetResponseAsync<PhotoInfo>(parameters);
+            var result = new FlickrResult<PlaceInfo>();
+            result.HasError = r.HasError;
+            if (result.HasError)
+            {
+                if (result.ErrorCode == 2)
                 {
-                    var result = new FlickrResult<PlaceInfo>();
-                    result.HasError = r.HasError;
-                    if (result.HasError)
-                    {
-                        if (result.ErrorCode == 2)
-                        {
-                            result.HasError = false;
-                            result.Result = null;
-                            result.Error = null;
-                        }
-                        else
-                        {
-                            result.Error = r.Error;
-                        }
-                    }
-                    else
-                    {
-                        result.Result = r.Result.Location;
-                    }
-                    callback(result);
-                });
+                    result.HasError = false;
+                    result.Result = null;
+                    result.Error = null;
+                }
+                else
+                {
+                    result.Error = r.Error;
+                }
+            }
+            else
+            {
+                result.Result = r.Result.Location;
+            }
+            return (result);
         }
 
         /// <summary>
@@ -103,8 +100,8 @@ namespace FlickrNet
         /// <param name="photoId">The id of the photo to set context data for.</param>
         /// <param name="context">Context is a numeric value representing the photo's geotagginess beyond latitude and longitude. 
         /// For example, you may wish to indicate that a photo was taken "indoors" or "outdoors". </param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosGeoSetContextAsync(string photoId, GeoContext context, Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> PhotosGeoSetContextAsync(string photoId, GeoContext context)
         {
             var parameters = new Dictionary<string, string>();
 
@@ -112,7 +109,7 @@ namespace FlickrNet
             parameters.Add("photo_id", photoId);
             parameters.Add("context", context.ToString("D"));
 
-            GetResponseAsync<NoResponse>(parameters, callback);
+            return await GetResponseAsync<NoResponse>(parameters);
         }
 
         /// <summary>
@@ -121,10 +118,10 @@ namespace FlickrNet
         /// <param name="photoId">The ID of the photo to set to location for.</param>
         /// <param name="latitude">The latitude of the geo location. A double number ranging from -180.00 to 180.00. Digits beyond 6 decimal places will be truncated.</param>
         /// <param name="longitude">The longitude of the geo location. A double number ranging from -180.00 to 180.00. Digits beyond 6 decimal places will be truncated.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosGeoSetLocationAsync(string photoId, double latitude, double longitude, Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> PhotosGeoSetLocationAsync(string photoId, double latitude, double longitude)
         {
-            PhotosGeoSetLocationAsync(photoId, latitude, longitude, GeoAccuracy.None, callback);
+            return await PhotosGeoSetLocationAsync(photoId, latitude, longitude, GeoAccuracy.None);
         }
 
         /// <summary>
@@ -134,8 +131,8 @@ namespace FlickrNet
         /// <param name="latitude">The latitude of the geo location. A double number ranging from -180.00 to 180.00. Digits beyond 6 decimal places will be truncated.</param>
         /// <param name="longitude">The longitude of the geo location. A double number ranging from -180.00 to 180.00. Digits beyond 6 decimal places will be truncated.</param>
         /// <param name="accuracy">The accuracy of the photos geo location.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosGeoSetLocationAsync(string photoId, double latitude, double longitude, GeoAccuracy accuracy, Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> PhotosGeoSetLocationAsync(string photoId, double latitude, double longitude, GeoAccuracy accuracy)
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.photos.geo.setLocation");
@@ -145,7 +142,7 @@ namespace FlickrNet
             if (accuracy != GeoAccuracy.None)
                 parameters.Add("accuracy", accuracy.ToString("D"));
 
-            GetResponseAsync<NoResponse>(parameters, callback);
+            return await GetResponseAsync<NoResponse>(parameters);
         }
 
         /// <summary>
@@ -160,10 +157,9 @@ namespace FlickrNet
         /// <param name="perPage">Number of photos to return per page. If this argument is omitted, it defaults to 100. 
         /// The maximum allowed value is 500.</param>
         /// <param name="page">The page of results to return. If this argument is omitted, it defaults to 1.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosGeoPhotosForLocationAsync(double latitude, double longitude, GeoAccuracy accuracy,
-                                                    PhotoSearchExtras extras, int perPage, int page,
-                                                    Action<FlickrResult<PhotoCollection>> callback)
+       
+        public async Task<FlickrResult<PhotoCollection>> PhotosGeoPhotosForLocationAsync(double latitude, double longitude, GeoAccuracy accuracy,
+                                                    PhotoSearchExtras extras, int perPage, int page)
         {
             CheckRequiresAuthentication();
 
@@ -178,7 +174,7 @@ namespace FlickrNet
                 parameters.Add("per_page", perPage.ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
             if (page > 0) parameters.Add("page", page.ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
 
-            GetResponseAsync<PhotoCollection>(parameters, callback);
+            return await GetResponseAsync<PhotoCollection>(parameters);
 
         }
 
@@ -186,38 +182,38 @@ namespace FlickrNet
         /// Removes Location information.
         /// </summary>
         /// <param name="photoId">The photo ID of the photo to remove information from.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosGeoRemoveLocationAsync(string photoId, Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> PhotosGeoRemoveLocationAsync(string photoId)
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.photos.geo.removeLocation");
             parameters.Add("photo_id", photoId);
 
-            GetResponseAsync<NoResponse>(parameters, callback);
+            return await GetResponseAsync<NoResponse>(parameters);
         }
 
         /// <summary>
         /// Gets a list of photos that do not contain geo location information.
         /// </summary>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosGetWithoutGeoDataAsync(Action<FlickrResult<PhotoCollection>> callback)
+       
+        public async Task<FlickrResult<PhotoCollection>> PhotosGetWithoutGeoDataAsync()
         {
             var options = new PartialSearchOptions();
-            PhotosGetWithoutGeoDataAsync(options, callback);
+            return await PhotosGetWithoutGeoDataAsync(options);
         }
 
         /// <summary>
         /// Gets a list of photos that do not contain geo location information.
         /// </summary>
         /// <param name="options">A limited set of options are supported.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosGetWithoutGeoDataAsync(PartialSearchOptions options, Action<FlickrResult<PhotoCollection>> callback)
+       
+        public async Task<FlickrResult<PhotoCollection>> PhotosGetWithoutGeoDataAsync(PartialSearchOptions options)
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.photos.getWithoutGeoData");
             UtilityMethods.PartialOptionsIntoArray(options, parameters);
 
-            GetResponseAsync<PhotoCollection>(parameters, callback);
+            return await GetResponseAsync<PhotoCollection>(parameters);
         }
 
         /// <summary>
@@ -227,11 +223,11 @@ namespace FlickrNet
         /// Note, this method doesn't actually return the location information with the photos, 
         /// unless you specify the <see cref="PhotoSearchExtras.Geo"/> option in the <c>extras</c> parameter.
         /// </remarks>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosGetWithGeoDataAsync(Action<FlickrResult<PhotoCollection>> callback)
+       
+        public async Task<FlickrResult<PhotoCollection>> PhotosGetWithGeoDataAsync()
         {
             var options = new PartialSearchOptions();
-            PhotosGetWithGeoDataAsync(options, callback);
+            return await PhotosGetWithGeoDataAsync(options);
         }
 
         /// <summary>
@@ -242,28 +238,28 @@ namespace FlickrNet
         /// unless you specify the <see cref="PhotoSearchExtras.Geo"/> option in the <c>extras</c> parameter.
         /// </remarks>
         /// <param name="options">The options to filter/sort the results by.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosGetWithGeoDataAsync(PartialSearchOptions options, Action<FlickrResult<PhotoCollection>> callback)
+       
+        public async Task<FlickrResult<PhotoCollection>> PhotosGetWithGeoDataAsync(PartialSearchOptions options)
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.photos.getWithGeoData");
             UtilityMethods.PartialOptionsIntoArray(options, parameters);
 
-            GetResponseAsync<PhotoCollection>(parameters, callback);
+            return await GetResponseAsync<PhotoCollection>(parameters);
         }
 
         /// <summary>
         /// Get permissions for a photo.
         /// </summary>
         /// <param name="photoId">The id of the photo to get permissions for.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosGeoGetPermsAsync(string photoId, Action<FlickrResult<GeoPermissions>> callback)
+       
+        public async Task<FlickrResult<GeoPermissions>> PhotosGeoGetPermsAsync(string photoId)
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.photos.geo.getPerms");
             parameters.Add("photo_id", photoId);
 
-            GetResponseAsync<GeoPermissions>(parameters, callback);
+            return await GetResponseAsync<GeoPermissions>(parameters);
         }
 
         /// <summary>
@@ -274,9 +270,8 @@ namespace FlickrNet
         /// <param name="isContact"></param>
         /// <param name="isFamily"></param>
         /// <param name="isFriend"></param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosGeoSetPermsAsync(string photoId, bool isPublic, bool isContact, bool isFamily, bool isFriend,
-                                           Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> PhotosGeoSetPermsAsync(string photoId, bool isPublic, bool isContact, bool isFamily, bool isFriend)
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.photos.geo.setPerms");
@@ -286,7 +281,7 @@ namespace FlickrNet
             parameters.Add("is_friend", isFriend ? "1" : "0");
             parameters.Add("is_family", isFamily ? "1" : "0");
 
-            GetResponseAsync<NoResponse>(parameters, callback);
+            return await GetResponseAsync<NoResponse>(parameters);
         }
 
     }

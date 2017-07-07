@@ -11,3 +11,8 @@
 *.user
 FlickerNet-DotNetStandard/bin/
 FlickerNet-DotNetStandard/obj/
+FlickrNetTest - Copy/
+.vs/
+FlickrNetTest/app.config
+FlickrNetTest-xUnit/bin/
+FlickrNetTest-xUnit/obj/

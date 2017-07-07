@@ -6,6 +6,8 @@ using System.Net;
 using System.Collections;
 using System.Xml.Serialization;
 using System.Xml;
+using System.Threading.Tasks;
+using System.Net.Http;
 
 namespace FlickrNet
 {
@@ -25,11 +27,9 @@ namespace FlickrNet
         /// <param name="contentType">The content type of the photo, i.e. Photo, Screenshot or Other.</param>
         /// <param name="safetyLevel">The safety level of the photo, i.e. Safe, Moderate or Restricted.</param>
         /// <param name="hiddenFromSearch">Is the photo hidden from public searches.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void UploadPictureAsync(Stream stream, string fileName, string title, string description, string tags,
+        public async Task<FlickrResult<string>> UploadPictureAsync(Stream stream, string fileName, string title, string description, string tags,
                                        bool isPublic, bool isFamily, bool isFriend, ContentType contentType,
-                                       SafetyLevel safetyLevel, HiddenFromSearch hiddenFromSearch,
-                                       Action<FlickrResult<string>> callback)
+                                       SafetyLevel safetyLevel, HiddenFromSearch hiddenFromSearch)
         {
             CheckRequiresAuthentication();
 
@@ -82,7 +82,7 @@ namespace FlickrNet
                 parameters.Add("auth_token", apiToken);
             }
 
-            UploadDataAsync(stream, fileName, uploadUri, parameters, callback);
+            return await UploadDataAsync(stream, fileName, uploadUri, parameters);
         }
 
         /// <summary>
@@ -91,8 +91,8 @@ namespace FlickrNet
         /// <param name="stream">The <see cref="Stream"/> object containing the photo to be uploaded.</param>
         /// <param name="fileName">The filename of the file to replace the existing item with.</param>
         /// <param name="photoId">The ID of the photo to replace.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void ReplacePictureAsync(Stream stream, string fileName, string photoId, Action<FlickrResult<string>> callback)
+       
+        public async Task<FlickrResult<string>> ReplacePictureAsync(Stream stream, string fileName, string photoId)
         {
             var replaceUri = new Uri(ReplaceUrl);
 
@@ -102,10 +102,10 @@ namespace FlickrNet
             parameters.Add("api_key", apiKey);
             parameters.Add("auth_token", apiToken);
 
-            UploadDataAsync(stream, fileName, replaceUri, parameters, callback);
+            return await UploadDataAsync(stream, fileName, replaceUri, parameters);
         }
 
-        private void UploadDataAsync(Stream imageStream, string fileName, Uri uploadUri, Dictionary<string, string> parameters, Action<FlickrResult<string>> callback)
+        private async Task<FlickrResult<string>> UploadDataAsync(Stream imageStream, string fileName, Uri uploadUri, Dictionary<string, string> parameters)
         {
             string boundary = "FLICKR_MIME_" + DateTime.Now.ToString("yyyyMMddhhmmss", System.Globalization.DateTimeFormatInfo.InvariantInfo);
 
@@ -113,69 +113,38 @@ namespace FlickrNet
 
             var dataBuffer = CreateUploadData(imageStream, fileName, parameters, boundary);
 
-            var req = (HttpWebRequest)WebRequest.Create(uploadUri);
-            req.Method = "POST";
-            req.ContentType = "multipart/form-data; boundary=" + boundary;
-#if (!SILVERLIGHT && !WINDOWS_PHONE)
-            req.SendChunked = true;
-#endif
-            req.AllowWriteStreamBuffering = false;
-
+            var req = new HttpRequestMessage(new HttpMethod("POST"), uploadUri);
+            var ms = new MemoryStream();
+            dataBuffer.CopyTo(ms);
+            ms.Seek(0, SeekOrigin.Begin);
+            req.Content = new StreamContent(ms);
+            req.Content.Headers.Add("Content-Type", "multipart/form-data; boundary=" + boundary);
             if (!string.IsNullOrEmpty(authHeader))
             {
-                req.Headers["Authorization"] = authHeader;
+                req.Headers.Add("Authorization", authHeader);
             }
 
-            req.BeginGetRequestStream(
-                r =>
+            var r2 = await httpClient.SendAsync(req);
+            {
+                var result = new FlickrResult<string>();
+
+                try
                 {
-                    using (var reqStream = req.EndGetRequestStream(r))
-                    {
-                        var bufferSize = 32 * 1024;
-                        if (dataBuffer.Length / 100 > bufferSize) bufferSize = bufferSize * 2;
-                        dataBuffer.UploadProgress += (o, e) => { if (OnUploadProgress != null) OnUploadProgress(this, e); };
-                        dataBuffer.CopyTo(reqStream, bufferSize);
-                        reqStream.Close();
-                    }
+                    r2.EnsureSuccessStatusCode();
+                    var responseXml = await r2.Content.ReadAsStringAsync();
 
-                    req.BeginGetResponse(
-                        r2 =>
-                        {
-                            var result = new FlickrResult<string>();
-
-                            try
-                            {
-                                var res = req.EndGetResponse(r2);
-                                var sr = new StreamReader(res.GetResponseStream());
-                                var responseXml = sr.ReadToEnd();
-                                sr.Close();
-
-                                var t = new UnknownResponse();
-                                ((IFlickrParsable)t).Load(responseXml);
-                                result.Result = t.GetElementValue("photoid");
-                                result.HasError = false;
-                            }
-                            catch (Exception ex)
-                            {
-                                if (ex is WebException)
-                                {
-                                    var oauthEx = new OAuthException(ex);
-                                    result.Error = string.IsNullOrEmpty(oauthEx.Message) ? ex : oauthEx;
-                                }
-                                else
-                                {
-                                    result.Error = ex;
-                                }
-                            }
-
-                            callback(result);
-
-                        }, 
-                        this);
-                }, 
-                this);
+                    var t = new UnknownResponse();
+                    ((IFlickrParsable)t).Load(responseXml);
+                    result.Result = t.GetElementValue("photoid");
+                    result.HasError = false;
+                }
+                catch (Exception ex)
+                {
+                    result.Error = ex;
+                }
+                return (result);
+            }
 
         }
-
     }
 }

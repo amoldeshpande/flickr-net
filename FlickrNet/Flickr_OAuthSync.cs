@@ -10,7 +10,7 @@ namespace FlickrNet
         /// Get an <see cref="OAuthRequestToken"/> for the given callback URL.
         /// </summary>
         /// <remarks>Specify 'oob' as the callback for no callback to be performed.</remarks>
-        /// <param name="callback">The callback Uri, or 'oob' if no callback is to be performed.</param>
+       
         /// <returns></returns>
         public OAuthRequestToken OAuthGetRequestToken(string callback)
         {

@@ -3,9 +3,8 @@ using System.Linq;
 using FlickrNet.Exceptions;
 using NUnit.Framework;
 using FlickrNet;
-using System.Reactive.Subjects;
-using System.Reactive.Linq;
 using Shouldly;
+using System.Threading.Tasks;
 
 namespace FlickrNetTest
 {
@@ -218,12 +217,9 @@ namespace FlickrNetTest
         }
 
         [Test]
-        public void TestPhotoNotFoundAsync()
+        public async Task TestPhotoNotFoundAsync()
         {
-            var w = new AsyncSubject<FlickrResult<PhotoInfo>>();
-
-            Instance.PhotosGetInfoAsync("abcd", r => { w.OnNext(r); w.OnCompleted(); });
-            var result = w.Next().First();
+            var result = await Instance.PhotosGetInfoAsync("abcd");
 
             result.HasError.ShouldBeTrue();
             result.Error.ShouldBeOfType<PhotoNotFoundException>();

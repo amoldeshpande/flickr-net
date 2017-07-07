@@ -1,4 +1,5 @@
-﻿using FlickrNet;
+﻿#if !DOTNETSTANDARD
+using FlickrNet;
 using NUnit.Framework;
 using System;
 using System.Xml;
@@ -50,3 +51,4 @@ namespace FlickrNetTest
         }
     }
 }
+#endif // !DOTNETSTANDARD

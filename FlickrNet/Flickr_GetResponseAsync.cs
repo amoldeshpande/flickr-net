@@ -4,6 +4,7 @@ using System.Xml;
 using System.IO;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 
@@ -12,17 +13,13 @@ namespace FlickrNet
     public partial class Flickr
     {
         HttpClient httpClient = new HttpClient();
-        private void GetResponseEvent<T>(Dictionary<string, string> parameters, EventHandler<FlickrResultArgs<T>> handler) where T : IFlickrParsable, new()
+        private async Task GetResponseEvent<T>(Dictionary<string, string> parameters, EventHandler<FlickrResultArgs<T>> handler) where T : IFlickrParsable, new()
         {
-            GetResponseAsync<T>(
-                parameters,
-                r =>
-                {
-                    handler(this, new FlickrResultArgs<T>(r));
-                });
+            var r = await GetResponseAsync<T>(parameters);
+            handler(this, new FlickrResultArgs<T>(r));
         }
 
-        private void GetResponseAsync<T>(Dictionary<string, string> parameters, Action<FlickrResult<T>> callback) where T : IFlickrParsable, new()
+        private async Task<FlickrResult<T>> GetResponseAsync<T>(Dictionary<string, string> parameters) where T : IFlickrParsable, new()
         {
             CheckApiKey();
 
@@ -49,53 +46,39 @@ namespace FlickrNet
                 }
             }
 
-
             var url = CalculateUri(parameters, !string.IsNullOrEmpty(sharedSecret));
 
             lastRequest = url;
+            var result = new FlickrResult<T>();
 
             try
             {
-                FlickrResponder.GetDataResponseAsync(this, BaseUri.AbsoluteUri, parameters, (r)
-                    =>
-                    {
-                        var result = new FlickrResult<T>();
-                        if (r.HasError)
-                        {
-                            result.Error = r.Error;
-                        }
-                        else
-                        {
-                            try
-                            {
-                                lastResponse = r.Result;
-
-                                var t = new T();
-                                ((IFlickrParsable)t).Load(r.Result);
-                                result.Result = t;
-                                result.HasError = false;
-                            }
-                            catch (Exception ex)
-                            {
-                                result.Error = ex;
-                            }
-                        }
-
-                        if (callback != null) callback(result);
-                    });
+                var r = await FlickrResponder.GetDataResponseAsync(this, BaseUri.AbsoluteUri, parameters);
+                if (!r.HasError)
+                {
+                    var t = new T();
+                    ((IFlickrParsable)t).Load(r.Result);
+                    result.Result = t;
+                    result.HasError = false;
+                }
+                else
+                {
+                    result.Error = r.Error;
+                }
             }
             catch (Exception ex)
             {
-                var result = new FlickrResult<T>();
+                result = new FlickrResult<T>();
                 result.Error = ex;
-                if (null != callback) callback(result);
             }
 
+            return result;
         }
 
-        private void DoGetResponseAsync<T>(Uri url, Action<FlickrResult<T>> callback) where T : IFlickrParsable, new()
+        private async Task<FlickrResult<T>> DoGetResponseAsync<T>(Uri url) where T : IFlickrParsable, new()
         {
             string postContents = string.Empty;
+            var result = new FlickrResult<T>();
 
             if (url.AbsoluteUri.Length > 2000)
             {
@@ -103,45 +86,27 @@ namespace FlickrNet
                 url = new Uri(url, string.Empty);
             }
 
-            var result = new FlickrResult<T>();
 
             var request = new HttpRequestMessage(new HttpMethod("POST"), url);
             request.Content = new StringContent(postContents);
             request.Content.Headers.Add("ContentType" , "application/x-www-form-urlencoded");
+
+            var response = await httpClient.SendAsync(request);
+            try
             {
-                
+                response.EnsureSuccessStatusCode();
+                String responseXml = await response.Content.ReadAsStringAsync();
+                var t = new T();
+                ((IFlickrParsable)t).Load(responseXml);
+                result.Result = t;
+                result.HasError = false;
+            }
+            catch(HttpRequestException ex)
+            {
+                result.Error = ex;
 
-                request.BeginGetResponse(responseAsyncResult =>
-                {
-                    try
-                    {
-                        var response = (HttpWebResponse)request.EndGetResponse(responseAsyncResult);
-                        using (StreamReader sr = new StreamReader(response.GetResponseStream()))
-                        {
-                            string responseXml = sr.ReadToEnd();
-
-                            lastResponse = responseXml;
-                            
-                            var t = new T();
-                            ((IFlickrParsable)t).Load(responseXml);
-                            result.Result = t;
-                            result.HasError = false;
-
-                            sr.Close();
-                        }
-
-                        if (null != callback) callback(result);
-
-                    }
-                    catch(Exception ex)
-                    {
-                        result.Error = ex;
-                        if (null != callback) callback(result);
-                    }
-                }, null);
-
-            }, null);
-
+            }
+            return result; 
         }
     }
 }

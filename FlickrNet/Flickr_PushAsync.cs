@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace FlickrNet
 {
@@ -9,40 +10,34 @@ namespace FlickrNet
         /// <summary>
         /// Get a list of subscriptions for the calling user.
         /// </summary>
-        /// <param name="callback"></param>
-        public void PushGetSubscriptionsAsync(Action<FlickrResult<SubscriptionCollection>> callback)
+       
+        public async Task<FlickrResult<SubscriptionCollection>> PushGetSubscriptionsAsync()
         {
             CheckRequiresAuthentication();
 
             var parameters = new Dictionary<string, string>() { { "method", "flickr.push.getSubscriptions" } };
 
-            GetResponseAsync<SubscriptionCollection>(parameters, callback);
+            return await GetResponseAsync<SubscriptionCollection>(parameters);
         }
 
         /// <summary>
         /// Get a list of topics that are available for subscription.
         /// </summary>
-        /// <param name="callback"></param>
-        public void PushGetTopicsAsync(Action<FlickrResult<string[]>> callback)
+       
+        public async Task<FlickrResult<string[]>> PushGetTopicsAsync()
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.push.getTopics");
 
-            GetResponseAsync<UnknownResponse>(parameters, r =>
+            var r = await GetResponseAsync<UnknownResponse>(parameters);
+            if (r.HasError)
             {
-                if (callback == null) return;
-                if (r.HasError)
-                {
-                    callback(new FlickrResult<string[]>() { Error = r.Error });
-                    return;
-                }
+                return (new FlickrResult<string[]>() { Error = r.Error });
+            }
 
-                var topics = r.Result.GetElementArray("topic", "name");
+            var topics = r.Result.GetElementArray("topic", "name");
 
-                callback(new FlickrResult<string[]>() { Result = topics });
-                return;
-
-            });
+            return (new FlickrResult<string[]>() { Result = topics });
 
         }
 
@@ -66,11 +61,10 @@ namespace FlickrNet
         /// <param name="tags">A list of strings to be used for tag subscriptions. 
         /// Photos with one or more of the tags listed will be included in the subscription. 
         /// Only valid if the topic is 'tags'</param>
-        /// <param name="callbackAction"></param>
-        public void PushSubscribeAsync(string topic, string callback, string verify, string verifyToken,
+        public async Task<FlickrResult<NoResponse>> PushSubscribeAsync(string topic, string callback, string verify, string verifyToken,
                                        int leaseSeconds, int[] woeIds, string[] placeIds, double latitude,
                                        double longitude, int radius, RadiusUnit radiusUnits, GeoAccuracy accuracy,
-                                       string[] nsids, string[] tags, Action<FlickrResult<NoResponse>> callbackAction)
+                                       string[] nsids, string[] tags)
         {
             CheckRequiresAuthentication();
 
@@ -102,7 +96,7 @@ namespace FlickrNet
             if (placeIds != null && placeIds.Length > 0) parameters.Add("place_ids", string.Join(",", placeIds));
             if (radiusUnits != RadiusUnit.None) parameters.Add("radius_units", radiusUnits.ToString("d"));
 
-            GetResponseAsync<NoResponse>(parameters, callbackAction);
+            return await GetResponseAsync<NoResponse>(parameters);
 
         }
 
@@ -113,8 +107,7 @@ namespace FlickrNet
         /// <param name="callback">The callback url to unsubscribe.</param>
         /// <param name="verify">Either 'sync' or 'async'.</param>
         /// <param name="verifyToken">The verification token to include in the unsubscribe verification process.</param>
-        /// <param name="callbackAction"></param>
-        public void PushUnsubscribeAsync(string topic, string callback, string verify, string verifyToken, Action<FlickrResult<NoResponse>> callbackAction)
+        public async Task<FlickrResult<NoResponse>> PushUnsubscribeAsync(string topic, string callback, string verify, string verifyToken)
         {
             CheckRequiresAuthentication();
 
@@ -129,7 +122,7 @@ namespace FlickrNet
             parameters.Add("verify", verify);
             if (!string.IsNullOrEmpty(verifyToken)) parameters.Add("verif_token", verifyToken);
 
-            GetResponseAsync<NoResponse>(parameters, callbackAction);
+            return await GetResponseAsync<NoResponse>(parameters);
         }
     }
 }

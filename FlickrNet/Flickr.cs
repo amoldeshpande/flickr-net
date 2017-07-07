@@ -41,7 +41,7 @@ namespace FlickrNet
         /// a segment of uploading has been completed. This is approximately 50 bytes. The total
         /// uploaded is recorded in the <see cref="UploadProgressEventArgs"/> class.
         /// </summary>
-        public event EventHandler<UploadProgressEventArgs> OnUploadProgress;
+        //public event EventHandler<UploadProgressEventArgs> OnUploadProgress;
 
 #if !(MONOTOUCH || WindowsCE || SILVERLIGHT || DOTNETSTANDARD)
         private static bool isServiceSet;
@@ -341,7 +341,7 @@ namespace FlickrNet
             InstanceCacheDisabled = CacheDisabled;
             CurrentService = DefaultService;
 
-#if !(MONOTOUCH || WindowsCE || SILVERLIGHT || DOTNETSTANDARD)
+#if !(MONOTOUCH || WindowsCE || SILVERLIGHT)
 
             var settings = FlickrConfigurationManager.Settings;
             if (settings == null) return;
@@ -352,6 +352,7 @@ namespace FlickrNet
             AuthToken = settings.ApiToken;
             ApiSecret = settings.SharedSecret;
 
+#if !DOTNETSTANDARD
             if (!settings.IsProxyDefined) return;
 
             Proxy = new WebProxy {Address = new Uri("http://" + settings.ProxyIPAddress + ":" + settings.ProxyPort)};
@@ -365,6 +366,7 @@ namespace FlickrNet
                             Domain = settings.ProxyDomain
                         };
             Proxy.Credentials = creds;
+#endif
 
 #endif
         }
@@ -583,7 +585,7 @@ namespace FlickrNet
                 }
             }
 
-            public EventHandler<UploadProgressEventArgs> UploadProgress;
+            //public EventHandler<UploadProgressEventArgs> UploadProgress;
 
             public void CopyTo(Stream stream, int bufferSize = 1024*16)
             {
@@ -600,8 +602,8 @@ namespace FlickrNet
                     {
                         soFar += read;
                         stream.Write(buffer, 0, read);
-                        if( UploadProgress != null)
-                            UploadProgress(this, new UploadProgressEventArgs { BytesSent = soFar, TotalBytesToSend = l.GetValueOrDefault(-1) });
+                        //if( UploadProgress != null)
+                        //    UploadProgress(this, new UploadProgressEventArgs { BytesSent = soFar, TotalBytesToSend = l.GetValueOrDefault(-1) });
                     }
                     stream.Flush();
                 }

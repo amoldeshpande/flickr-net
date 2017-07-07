@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Collections;
+using System.Threading.Tasks;
 
 namespace FlickrNet
 {
@@ -12,8 +13,8 @@ namespace FlickrNet
         /// Gets information about a collection. Requires authentication with 'read' access.
         /// </summary>
         /// <param name="collectionId">The ID for the collection to return.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void CollectionsGetInfoAsync(string collectionId, Action<FlickrResult<CollectionInfo>> callback)
+       
+        public async Task <FlickrResult<CollectionInfo>> CollectionsGetInfoAsync(string collectionId)
         {
             CheckRequiresAuthentication();
 
@@ -21,17 +22,17 @@ namespace FlickrNet
             parameters.Add("method", "flickr.collections.getInfo");
             parameters.Add("collection_id", collectionId);
 
-            GetResponseAsync<CollectionInfo>(parameters, callback);
+            return await GetResponseAsync<CollectionInfo>(parameters);
 
         }
 
         /// <summary>
         /// Gets a tree of collection. Requires authentication.
         /// </summary>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void CollectionsGetTreeAsync(Action<FlickrResult<CollectionCollection>> callback)
+       
+        public async Task<FlickrResult<CollectionCollection>> CollectionsGetTreeAsync()
         {
-            CollectionsGetTreeAsync(null, null, callback);
+            return await CollectionsGetTreeAsync(null, null);
         }
 
         /// <summary>
@@ -39,8 +40,8 @@ namespace FlickrNet
         /// </summary>
         /// <param name="collectionId ">The ID of the collection to fetch a tree for, or zero to fetch the root collection.</param>
         /// <param name="userId">The ID of the user to fetch the tree for, or null if using the authenticated user.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void CollectionsGetTreeAsync(string collectionId, string userId, Action<FlickrResult<CollectionCollection>> callback)
+       
+        public async Task <FlickrResult<CollectionCollection>> CollectionsGetTreeAsync(string collectionId, string userId)
         {
             if (string.IsNullOrEmpty(userId)) CheckRequiresAuthentication();
 
@@ -49,7 +50,7 @@ namespace FlickrNet
             if (collectionId != null) parameters.Add("collection_id", collectionId);
             if (userId != null) parameters.Add("user_id", userId);
 
-            GetResponseAsync<CollectionCollection>(parameters, callback);
+            return await GetResponseAsync<CollectionCollection>(parameters);
         }
 
     }

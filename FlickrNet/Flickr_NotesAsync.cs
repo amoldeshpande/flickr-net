@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Collections;
 using System.Xml;
+using System.Threading.Tasks;
 
 namespace FlickrNet
 {
@@ -17,8 +18,8 @@ namespace FlickrNet
         /// <param name="noteWidth">The width of the note.</param>
         /// <param name="noteHeight">The height of the note.</param>
         /// <param name="noteText">The text in the note.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosNotesAddAsync(string photoId, int noteX, int noteY, int noteWidth, int noteHeight, string noteText, Action<FlickrResult<string>> callback)
+       
+        public async Task<FlickrResult<string>> PhotosNotesAddAsync(string photoId, int noteX, int noteY, int noteWidth, int noteHeight, string noteText)
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.photos.notes.add");
@@ -29,22 +30,18 @@ namespace FlickrNet
             parameters.Add("note_h", noteHeight.ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
             parameters.Add("note_text", noteText);
 
-            GetResponseAsync<UnknownResponse>(
-                parameters,
-                r =>
-                {
-                    var result = new FlickrResult<string>();
-                    result.HasError = r.HasError;
-                    if (r.HasError)
-                    {
-                        result.Error = r.Error;
-                    }
-                    else
-                    {
-                        result.Result = r.Result.GetAttributeValue("*", "id");
-                    }
-                    callback(result);
-                });
+            var r = await GetResponseAsync<UnknownResponse>(parameters);
+            var result = new FlickrResult<string>();
+            result.HasError = r.HasError;
+            if (r.HasError)
+            {
+                result.Error = r.Error;
+            }
+            else
+            {
+                result.Result = r.Result.GetAttributeValue("*", "id");
+            }
+            return (result);
         }
 
         /// <summary>
@@ -56,8 +53,8 @@ namespace FlickrNet
         /// <param name="noteWidth">The width of the note.</param>
         /// <param name="noteHeight">The height of the note.</param>
         /// <param name="noteText">The new text in the note.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosNotesEditAsync(string noteId, int noteX, int noteY, int noteWidth, int noteHeight, string noteText, Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> PhotosNotesEditAsync(string noteId, int noteX, int noteY, int noteWidth, int noteHeight, string noteText)
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.photos.notes.edit");
@@ -68,21 +65,21 @@ namespace FlickrNet
             parameters.Add("note_h", noteHeight.ToString(System.Globalization.NumberFormatInfo.InvariantInfo));
             parameters.Add("note_text", noteText);
 
-            GetResponseAsync<NoResponse>(parameters, callback);
+            return await GetResponseAsync<NoResponse>(parameters);
         }
 
         /// <summary>
         /// Delete an existing note.
         /// </summary>
         /// <param name="noteId">The ID of the note.</param>
-        /// <param name="callback">Callback method to call upon return of the response from Flickr.</param>
-        public void PhotosNotesDeleteAsync(string noteId, Action<FlickrResult<NoResponse>> callback)
+       
+        public async Task<FlickrResult<NoResponse>> PhotosNotesDeleteAsync(string noteId)
         {
             var parameters = new Dictionary<string, string>();
             parameters.Add("method", "flickr.photos.notes.delete");
             parameters.Add("note_id", noteId);
 
-            GetResponseAsync<NoResponse>(parameters, callback);
+            return await GetResponseAsync<NoResponse>(parameters);
         }
     }
 }

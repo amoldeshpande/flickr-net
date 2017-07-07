@@ -2,9 +2,8 @@
 using System.Linq;
 using NUnit.Framework;
 using FlickrNet;
-using System.Reactive.Subjects;
-using System.Reactive.Linq;
 using Shouldly;
+using System.Threading.Tasks;
 
 namespace FlickrNetTest.Async
 {
@@ -12,7 +11,7 @@ namespace FlickrNetTest.Async
     public class PhotosAsyncTests : BaseTest
     {
         [Test]
-        public void PhotosSearchRussianAsync()
+        public async Task PhotosSearchRussianAsync()
         {
             var o = new PhotoSearchOptions();
             o.Extras = PhotoSearchExtras.Tags;
@@ -21,9 +20,7 @@ namespace FlickrNetTest.Async
 
             Flickr f = Instance;
 
-            var w = new AsyncSubject<FlickrResult<PhotoCollection>>();
-            f.PhotosSearchAsync(o, r => { w.OnNext(r); w.OnCompleted(); });
-            var result = w.Next().First();
+            var result = await f.PhotosSearchAsync(o);
 
             Assert.IsFalse(result.HasError);
             Assert.IsNotNull(result.Result);
@@ -38,13 +35,11 @@ namespace FlickrNetTest.Async
 
         }
         [Test]
-        public void PhotosGetContactsPublicPhotosAsyncTest()
+        public async Task PhotosGetContactsPublicPhotosAsyncTest()
         {
             Flickr f = Instance;
 
-            var w = new AsyncSubject<FlickrResult<PhotoCollection>>();
-            f.PhotosGetContactsPublicPhotosAsync(TestData.TestUserId, 5, true, true, true, PhotoSearchExtras.All, r => { w.OnNext(r); w.OnCompleted(); });
-            var result = w.Next().First();
+            var result = await f.PhotosGetContactsPublicPhotosAsync(TestData.TestUserId, 5, true, true, true, PhotoSearchExtras.All);
 
             Assert.IsFalse(result.HasError);
             Assert.IsNotNull(result.Result);
@@ -54,7 +49,7 @@ namespace FlickrNetTest.Async
 
         [Test]
         [Category("AccessTokenRequired")]
-        public void PhotosGetCountsAsyncTest()
+        public async Task PhotosGetCountsAsyncTest()
         {
             DateTime date1 = DateTime.Today.AddMonths(-12);
             DateTime date2 = DateTime.Today.AddMonths(-6);
@@ -64,9 +59,7 @@ namespace FlickrNetTest.Async
 
             Flickr f = AuthInstance;
 
-            var w = new AsyncSubject<FlickrResult<PhotoCountCollection>>();
-            f.PhotosGetCountsAsync(uploadDates, false, r => { w.OnNext(r); w.OnCompleted(); });
-            var result = w.Next().First();
+            var result = await f.PhotosGetCountsAsync(uploadDates, false);
 
             Assert.IsFalse(result.HasError);
 
@@ -86,25 +79,21 @@ namespace FlickrNetTest.Async
         }
 
         [Test]
-        public void PhotosGetExifAsyncTest()
+        public async Task PhotosGetExifAsyncTest()
         {
             Flickr f = Instance;
 
-            var w = new AsyncSubject<FlickrResult<ExifTagCollection>>();
-            f.PhotosGetExifAsync(TestData.PhotoId, r => { w.OnNext(r); w.OnCompleted(); });
-            var result = w.Next().First();
+            var result = await f.PhotosGetExifAsync(TestData.PhotoId);
 
             Assert.IsFalse(result.HasError);
 
         }
 
         [Test]
-        public void PhotosGetRecentAsyncTest()
+        public async Task PhotosGetRecentAsyncTest()
         {
             Flickr f = Instance;
-            var w = new AsyncSubject<FlickrResult<PhotoCollection>>();
-            f.PhotosGetRecentAsync(1, 50, PhotoSearchExtras.All, r => { w.OnNext(r); w.OnCompleted(); });
-            var result = w.Next().First();
+            var result = await f.PhotosGetRecentAsync(1, 50, PhotoSearchExtras.All);
 
             Assert.IsFalse(result.HasError);
             Assert.IsNotNull(result.Result);
